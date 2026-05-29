@@ -1,0 +1,147 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_Cobranza - API de Financiero
+  description: |
+    Servicio encargado de registrar y procesar la cobranza asociada a un pedido, centralizando el proceso financiero de validación y confirmación de pago.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Encapsulación, ya que centraliza el proceso financiero de cobranza asociado al pedido.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/financiero
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /cobranzas/procesar:
+    post:
+      summary: Procesar cobranza
+      description: Recibe la información de un pedido y registra el pago correspondiente en el sistema financiero.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CobranzaRequest'
+            example:
+              id_pedido: "PED-000125"
+              id_cliente: 150
+              monto_total: 1250.50
+              moneda: "PEN"
+              metodo_pago: "transferencia"
+      responses:
+        '200':
+          description: Cobranza procesada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseError400'
+        '409':
+          description: Pago ya registrado previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseError409'
+
+components:
+  schemas:
+    CobranzaRequest:
+      type: object
+      required:
+        - id_pedido
+        - id_cliente
+        - monto_total
+        - moneda
+        - metodo_pago
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido asociado a la cobranza."
+          example: "PED-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente asociado al pedido."
+          example: 150
+        monto_total:
+          type: number
+          format: float
+          minimum: 0
+          description: "Monto total a cobrar por el pedido."
+          example: 1250.50
+        moneda:
+          type: string
+          maxLength: 10
+          description: "Moneda en la que se realiza la cobranza."
+          example: "PEN"
+        metodo_pago:
+          type: string
+          maxLength: 30
+          description: "Método de pago utilizado por el cliente."
+          example: "transferencia"
+
+    CobranzaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_pago:
+          type: string
+          maxLength: 50
+          example: "PAGO-000321"
+        estado_pago:
+          type: string
+          maxLength: 30
+          example: "confirmado"
+        mensaje:
+          type: string
+          example: "Cobranza procesada correctamente"
+
+    CobranzaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El monto, moneda o método de pago enviado es inválido."
+
+    CobranzaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PAGO_YA_REGISTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El pedido enviado ya cuenta con un pago registrado previamente."

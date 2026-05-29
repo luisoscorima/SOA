@@ -1,0 +1,153 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_CargaMercancia - API de Logística
+  description: |
+    Servicio encargado de registrar la carga de mercancía en el camión asignado, representando el proceso físico de carga como una operación lógica dentro del sistema logístico.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Abstracción, ya que representa un proceso físico como un servicio lógico.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /mercancia/cargar:
+    post:
+      summary: Cargar mercancía en camión
+      description: Registra la carga de pallets en el camión asignado para el despacho.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CargaMercanciaRequest'
+            example:
+              id_camion: "CAM-000321"
+              placa_vehiculo: "ABC-123"
+              id_transportista: "TR-000125"
+              pallets:
+                - id_pallet: "PALLET-000987"
+                  codigo_lpn: "LPN-2026-000458"
+      responses:
+        '200':
+          description: Camión cargado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseError400'
+        '409':
+          description: Pallets ya cargados previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseError409'
+
+components:
+  schemas:
+    CargaMercanciaRequest:
+      type: object
+      required:
+        - id_camion
+        - placa_vehiculo
+        - pallets
+      properties:
+        id_camion:
+          type: string
+          maxLength: 50
+          description: "Código único del camión asignado para el despacho."
+          example: "CAM-000321"
+        placa_vehiculo:
+          type: string
+          maxLength: 10
+          description: "Placa del vehículo donde se cargará la mercancía."
+          example: "ABC-123"
+        id_transportista:
+          type: string
+          maxLength: 50
+          description: "Código del transportista responsable del traslado."
+          example: "TR-000125"
+        pallets:
+          type: array
+          description: "Listado de pallets que serán cargados en el camión."
+          items:
+            type: object
+            properties:
+              id_pallet:
+                type: string
+                maxLength: 50
+                example: "PALLET-000987"
+              codigo_lpn:
+                type: string
+                maxLength: 50
+                example: "LPN-2026-000458"
+
+    CargaMercanciaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_carga:
+          type: string
+          maxLength: 50
+          example: "CARGA-000654"
+        estado_camion:
+          type: string
+          maxLength: 30
+          example: "cargado"
+        cantidad_pallets:
+          type: integer
+          example: 1
+        mensaje:
+          type: string
+          example: "Camión cargado correctamente"
+
+    CargaMercanciaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La lista de pallets no puede estar vacía."
+
+    CargaMercanciaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PALLETS_YA_CARGADOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Uno o más pallets ya fueron cargados previamente en un camión."

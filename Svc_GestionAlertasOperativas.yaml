@@ -1,0 +1,145 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_GestionAlertasOperativas - API de TMS
+  description: |
+    Servicio encargado de gestionar alertas operativas generadas durante los procesos logísticos y de transporte, permitiendo desacoplar el monitoreo y las incidencias del flujo principal.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Utilidad
+
+    * **Justificación SOA:** Desacopla el monitoreo y la gestión de incidencias del flujo principal de operación.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/tms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /alertas/operativas:
+    post:
+      summary: Generar alerta operativa
+      description: Registra y genera alertas operativas asociadas a eventos detectados durante el transporte o monitoreo logístico.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GestionAlertasOperativasRequest'
+            example:
+              id_evento: "EVT-000789"
+              tipo_alerta: "retraso_ruta"
+              severidad: "alta"
+              id_ruta: "RUTA-000789"
+              descripcion: "Se detectó retraso superior a 30 minutos."
+      responses:
+        '200':
+          description: Alerta operativa generada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionAlertasOperativasResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionAlertasOperativasResponseError400'
+        '409':
+          description: Alerta ya registrada previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionAlertasOperativasResponseError409'
+
+components:
+  schemas:
+    GestionAlertasOperativasRequest:
+      type: object
+      required:
+        - id_evento
+        - tipo_alerta
+        - severidad
+      properties:
+        id_evento:
+          type: string
+          maxLength: 50
+          description: "Código único del evento que genera la alerta."
+          example: "EVT-000789"
+        tipo_alerta:
+          type: string
+          maxLength: 50
+          description: "Clasificación de la alerta operativa generada."
+          example: "retraso_ruta"
+        severidad:
+          type: string
+          maxLength: 20
+          description: "Nivel de severidad de la alerta."
+          example: "alta"
+        id_ruta:
+          type: string
+          maxLength: 50
+          description: "Código de la ruta asociada a la alerta."
+          example: "RUTA-000789"
+        descripcion:
+          type: string
+          maxLength: 250
+          description: "Detalle descriptivo de la alerta operativa."
+          example: "Se detectó retraso superior a 30 minutos."
+
+    GestionAlertasOperativasResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_alerta:
+          type: string
+          maxLength: 50
+          example: "ALT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "generada"
+        mensaje:
+          type: string
+          example: "Alerta operativa generada correctamente"
+
+    GestionAlertasOperativasResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de la alerta operativa es inválida o incompleta."
+
+    GestionAlertasOperativasResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "ALERTA_YA_REGISTRADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El evento enviado ya cuenta con una alerta operativa registrada."

@@ -1,0 +1,148 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_SincronizacionERP_WMS - API de Integración Logística
+  description: |
+    Servicio encargado de sincronizar pedidos generados en el ERP con el sistema WMS, permitiendo la transferencia de información necesaria para la gestión de almacén y despacho.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Integración
+
+    * **Justificación SOA:** Interoperabilidad entre sistemas heterogéneos y bajo acoplamiento entre ERP y WMS.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/integracion
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /erp-wms/sincronizar-pedido:
+    post:
+      summary: Sincronizar pedido ERP con WMS
+      description: Recibe un pedido generado en el ERP y lo transforma en un pedido compatible con el sistema WMS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoERPRequest'
+            example:
+              id_pedido_erp: "ERP-000125"
+              id_cliente: 150
+              fecha_pedido: "2026-05-29"
+              id_producto: "SKU_IK_1.5L"
+              cantidad: 120
+              id_centro_distribucion: "CD_PUCUSANA"
+      responses:
+        '200':
+          description: Pedido sincronizado correctamente con el WMS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoWMSResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoWMSResponseError400'
+        '409':
+          description: Pedido ya sincronizado previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoWMSResponseError409'
+
+components:
+  schemas:
+    PedidoERPRequest:
+      type: object
+      required:
+        - id_pedido_erp
+        - id_cliente
+        - fecha_pedido
+        - id_producto
+        - cantidad
+      properties:
+        id_pedido_erp:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido generado en el ERP."
+          example: "ERP-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente asociado al pedido."
+          example: 150
+        fecha_pedido:
+          type: string
+          format: date
+          description: "Fecha de emisión del pedido en el ERP."
+          example: "2026-05-29"
+        id_producto:
+          type: string
+          maxLength: 50
+          description: "Código SKU del producto solicitado."
+          example: "SKU_IK_1.5L"
+        cantidad:
+          type: integer
+          minimum: 1
+          description: "Cantidad solicitada para despacho."
+          example: 120
+        id_centro_distribucion:
+          type: string
+          maxLength: 20
+          description: "Código del centro de distribución destino."
+          example: "CD_PUCUSANA"
+
+    PedidoWMSResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_pedido_wms:
+          type: string
+          maxLength: 50
+          example: "WMS-000987"
+        mensaje:
+          type: string
+          example: "Pedido sincronizado correctamente con el WMS"
+
+    PedidoWMSResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El pedido ERP contiene datos incompletos o inválidos."
+
+    PedidoWMSResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PEDIDO_DUPLICADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El pedido ERP ya fue sincronizado previamente con el WMS."

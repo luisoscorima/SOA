@@ -1,0 +1,158 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ActualizacionStockAutomatico - API de ERP/WMS
+  description: |
+    Servicio encargado de actualizar automáticamente el stock a partir de movimientos de inventario, manteniendo la sincronización entre el inventario físico del WMS y el inventario lógico del ERP.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Integración
+
+    * **Justificación SOA:** Mantiene la sincronización automática entre inventario físico y lógico, integrando los movimientos registrados en WMS con el stock del ERP.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/inventario
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /stock/actualizar-automatico:
+    post:
+      summary: Actualizar stock automático
+      description: Recibe un movimiento de inventario y actualiza automáticamente el stock disponible en ERP/WMS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizacionStockAutomaticoRequest'
+            example:
+              id_movimiento: "MOV-000125"
+              id_producto: "SKU_IK_1.5L"
+              id_almacen: "ALM_LIMA"
+              tipo_movimiento: "salida"
+              cantidad: 120
+              sistema_origen: "WMS"
+      responses:
+        '200':
+          description: Stock actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActualizacionStockAutomaticoResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActualizacionStockAutomaticoResponseError400'
+        '409':
+          description: Movimiento ya procesado previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActualizacionStockAutomaticoResponseError409'
+
+components:
+  schemas:
+    ActualizacionStockAutomaticoRequest:
+      type: object
+      required:
+        - id_movimiento
+        - id_producto
+        - id_almacen
+        - tipo_movimiento
+        - cantidad
+        - sistema_origen
+      properties:
+        id_movimiento:
+          type: string
+          maxLength: 50
+          description: "Código único del movimiento de inventario registrado."
+          example: "MOV-000125"
+        id_producto:
+          type: string
+          maxLength: 50
+          description: "Código único del producto cuyo stock será actualizado."
+          example: "SKU_IK_1.5L"
+        id_almacen:
+          type: string
+          maxLength: 20
+          description: "Código del almacén donde se genera el movimiento."
+          example: "ALM_LIMA"
+        tipo_movimiento:
+          type: string
+          maxLength: 30
+          description: "Tipo de movimiento de inventario registrado."
+          example: "salida"
+        cantidad:
+          type: integer
+          minimum: 1
+          description: "Cantidad de unidades afectadas por el movimiento."
+          example: 120
+        sistema_origen:
+          type: string
+          maxLength: 20
+          description: "Sistema desde donde se origina el movimiento de inventario."
+          example: "WMS"
+
+    ActualizacionStockAutomaticoResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_actualizacion:
+          type: string
+          maxLength: 50
+          example: "STOCK-000321"
+        stock_actualizado:
+          type: integer
+          minimum: 0
+          example: 230
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Stock actualizado correctamente en ERP/WMS"
+
+    ActualizacionStockAutomaticoResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información del movimiento de inventario es inválida o incompleta."
+
+    ActualizacionStockAutomaticoResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "MOVIMIENTO_YA_PROCESADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El movimiento de inventario enviado ya fue procesado previamente."

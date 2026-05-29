@@ -1,0 +1,143 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ValidacionFactura - API de Repartidor
+  description: |
+    Servicio encargado de validar los productos entregados contra la factura asociada, garantizando la integridad y consistencia de la información comercial y logística.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Consistencia, ya que garantiza la integridad de los datos entre la entrega física y la facturación.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/repartidor
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /facturas/validar:
+    post:
+      summary: Validar productos contra factura
+      description: Compara los productos entregados con los productos registrados en la factura asociada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionFacturaRequest'
+            example:
+              id_factura: "FAC-000125"
+              id_entrega: "ENT-000125"
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  cantidad_entregada: 120
+      responses:
+        '200':
+          description: Validación realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseError400'
+        '409':
+          description: Inconsistencia detectada entre factura y entrega
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseError409'
+
+components:
+  schemas:
+    ValidacionFacturaRequest:
+      type: object
+      required:
+        - id_factura
+        - id_entrega
+        - productos
+      properties:
+        id_factura:
+          type: string
+          maxLength: 50
+          description: "Código único de la factura asociada a la entrega."
+          example: "FAC-000125"
+        id_entrega:
+          type: string
+          maxLength: 50
+          description: "Código único de la entrega realizada."
+          example: "ENT-000125"
+        productos:
+          type: array
+          description: "Listado de productos entregados que serán comparados contra la factura."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              cantidad_entregada:
+                type: integer
+                minimum: 1
+                example: 120
+
+    ValidacionFacturaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        validacion_correcta:
+          type: boolean
+          example: true
+        estado:
+          type: string
+          maxLength: 30
+          example: "validado"
+        mensaje:
+          type: string
+          example: "Los productos entregados coinciden con la factura"
+
+    ValidacionFacturaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de productos entregados es inválida o incompleta."
+
+    ValidacionFacturaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "INCONSISTENCIA_FACTURA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Existen diferencias entre los productos entregados y los registrados en la factura."

@@ -1,0 +1,140 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ConsultaEstadoPedido - API de ERP
+  description: |
+    Servicio encargado de consultar el estado actual de un pedido dentro del ERP, permitiendo obtener información actualizada del proceso comercial y logístico.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Utilidad
+
+    * **Justificación SOA:** Stateless, ya que permite consultas concurrentes sin mantener sesión entre solicitudes.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/erp
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /pedidos/estado:
+    get:
+      summary: Consultar estado de pedido
+      description: Consulta el estado actual de un pedido registrado en el ERP.
+      parameters:
+        - name: id_pedido
+          in: query
+          required: true
+          description: Código único del pedido a consultar.
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 50
+            example: "PED-000125"
+
+      responses:
+        '200':
+          description: Estado del pedido obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaEstadoPedidoResponseExito'
+
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaEstadoPedidoResponseError400'
+
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaEstadoPedidoResponseError404'
+
+components:
+  schemas:
+
+    ConsultaEstadoPedidoRequest:
+      type: object
+      required:
+        - id_pedido
+      properties:
+        id_pedido:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: "Código único del pedido registrado en el ERP."
+          example: "PED-000125"
+
+    ConsultaEstadoPedidoResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+        id_pedido:
+          type: string
+          maxLength: 50
+          example: "PED-000125"
+
+        estado:
+          type: string
+          maxLength: 50
+          description: "Estado actual del pedido."
+          example: "en_ruta"
+
+        fecha_actualizacion:
+          type: string
+          format: date-time
+          description: "Fecha y hora de la última actualización del pedido."
+          example: "2026-05-29T15:30:00"
+
+        mensaje:
+          type: string
+          example: "Estado del pedido consultado correctamente"
+
+    ConsultaEstadoPedidoResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El identificador del pedido no cumple con el formato requerido."
+
+    ConsultaEstadoPedidoResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+
+        error:
+          type: string
+          maxLength: 100
+          example: "PEDIDO_NO_ENCONTRADO"
+
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No existe un pedido registrado con el identificador enviado."

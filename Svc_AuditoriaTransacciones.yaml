@@ -1,0 +1,152 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_AuditoriaTransacciones - API de Seguridad
+  description: |
+    Servicio encargado de registrar eventos críticos del sistema para fines de auditoría, trazabilidad y seguimiento de operaciones.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Utilidad
+
+    * **Justificación SOA:** Permite trazabilidad y seguimiento de operaciones críticas del sistema mediante registros centralizados de auditoría.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/seguridad
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /auditoria/transacciones:
+    post:
+      summary: Registrar auditoría de transacción
+      description: Registra eventos críticos y operaciones realizadas dentro del sistema para fines de auditoría y seguridad.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditoriaTransaccionesRequest'
+            example:
+              id_evento: "EVT-000125"
+              usuario: "admin_logistica"
+              modulo: "despachos"
+              accion: "actualizacion_stock"
+              fecha_evento: "2026-05-29T16:30:00"
+              detalle: "Actualización automática de stock ejecutada correctamente."
+      responses:
+        '200':
+          description: Auditoría registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseError400'
+        '409':
+          description: Evento ya registrado previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseError409'
+
+components:
+  schemas:
+    AuditoriaTransaccionesRequest:
+      type: object
+      required:
+        - id_evento
+        - usuario
+        - accion
+        - fecha_evento
+      properties:
+        id_evento:
+          type: string
+          maxLength: 50
+          description: "Código único del evento auditado."
+          example: "EVT-000125"
+        usuario:
+          type: string
+          maxLength: 100
+          description: "Usuario responsable de la operación registrada."
+          example: "admin_logistica"
+        modulo:
+          type: string
+          maxLength: 50
+          description: "Módulo del sistema donde ocurrió la transacción."
+          example: "despachos"
+        accion:
+          type: string
+          maxLength: 100
+          description: "Acción crítica ejecutada dentro del sistema."
+          example: "actualizacion_stock"
+        fecha_evento:
+          type: string
+          format: date-time
+          description: "Fecha y hora del evento auditado."
+          example: "2026-05-29T16:30:00"
+        detalle:
+          type: string
+          maxLength: 250
+          description: "Descripción detallada del evento registrado."
+          example: "Actualización automática de stock ejecutada correctamente."
+
+    AuditoriaTransaccionesResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_auditoria:
+          type: string
+          maxLength: 50
+          example: "AUD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Evento de auditoría registrado correctamente"
+
+    AuditoriaTransaccionesResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información del evento de auditoría es inválida o incompleta."
+
+    AuditoriaTransaccionesResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "EVENTO_YA_REGISTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El evento enviado ya fue registrado previamente en auditoría."

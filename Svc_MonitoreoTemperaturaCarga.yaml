@@ -1,0 +1,143 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_MonitoreoTemperaturaCarga - API de TMS
+  description: |
+    Servicio encargado de monitorear la temperatura de la carga durante el transporte, permitiendo generar alertas automáticas cuando las condiciones exceden los rangos permitidos.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Utilidad
+
+    * **Justificación SOA:** Reusabilidad, ya que permite el monitoreo continuo de condiciones de transporte en distintos procesos logísticos.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/tms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /temperatura/monitorear:
+    post:
+      summary: Monitorear temperatura de carga
+      description: Registra y evalúa la temperatura capturada por sensores durante el transporte de mercancía.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonitoreoTemperaturaCargaRequest'
+            example:
+              id_vehiculo: "VEH-000321"
+              id_sensor: "SENSOR-001"
+              temperatura_actual: 6.5
+              unidad_medida: "C"
+              id_ruta: "RUTA-000789"
+      responses:
+        '200':
+          description: Temperatura monitoreada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseError400'
+        '409':
+          description: Temperatura fuera del rango permitido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseError409'
+
+components:
+  schemas:
+    MonitoreoTemperaturaCargaRequest:
+      type: object
+      required:
+        - id_sensor
+        - temperatura_actual
+      properties:
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          description: "Código único del vehículo monitoreado."
+          example: "VEH-000321"
+        id_sensor:
+          type: string
+          maxLength: 50
+          description: "Código del sensor que registra la temperatura."
+          example: "SENSOR-001"
+        temperatura_actual:
+          type: number
+          format: float
+          description: "Temperatura registrada por el sensor."
+          example: 6.5
+        unidad_medida:
+          type: string
+          maxLength: 5
+          description: "Unidad de medida utilizada para la temperatura."
+          example: "C"
+        id_ruta:
+          type: string
+          maxLength: 50
+          description: "Código de la ruta asociada al monitoreo."
+          example: "RUTA-000789"
+
+    MonitoreoTemperaturaCargaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        alerta_generada:
+          type: boolean
+          example: false
+        estado:
+          type: string
+          maxLength: 30
+          example: "temperatura_normal"
+        mensaje:
+          type: string
+          example: "Temperatura monitoreada correctamente"
+
+    MonitoreoTemperaturaCargaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La temperatura o información del sensor es inválida."
+
+    MonitoreoTemperaturaCargaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "TEMPERATURA_FUERA_DE_RANGO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La temperatura registrada excede los límites permitidos para la carga."

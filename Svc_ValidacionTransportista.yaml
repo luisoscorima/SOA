@@ -1,0 +1,140 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ValidacionTransportista - API de Logística
+  description: |
+    Servicio encargado de validar los datos del transportista antes de autorizar su participación en el proceso de despacho, centralizando las verificaciones legales y operativas.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Encapsulación, ya que centraliza validaciones legales y operativas del transportista.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /transportistas/validar:
+    post:
+      summary: Validar transportista
+      description: Recibe los datos del transportista y verifica si cumple con los requisitos legales y operativos para realizar el despacho.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionTransportistaRequest'
+            example:
+              id_transportista: "TR-000125"
+              ruc: "20548796321"
+              licencia_conducir: "Q12345678"
+              placa_vehiculo: "ABC-123"
+      responses:
+        '200':
+          description: Transportista validado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionTransportistaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionTransportistaResponseError400'
+        '409':
+          description: Transportista no cumple con los requisitos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionTransportistaResponseError409'
+
+components:
+  schemas:
+    ValidacionTransportistaRequest:
+      type: object
+      required:
+        - id_transportista
+        - ruc
+        - licencia_conducir
+        - placa_vehiculo
+      properties:
+        id_transportista:
+          type: string
+          maxLength: 50
+          description: "Código único del transportista registrado."
+          example: "TR-000125"
+        ruc:
+          type: string
+          minLength: 11
+          maxLength: 11
+          description: "Número de RUC del transportista o empresa de transporte."
+          example: "20548796321"
+        licencia_conducir:
+          type: string
+          maxLength: 20
+          description: "Número de licencia de conducir del responsable del traslado."
+          example: "Q12345678"
+        placa_vehiculo:
+          type: string
+          maxLength: 10
+          description: "Placa del vehículo asignado para el despacho."
+          example: "ABC-123"
+
+    ValidacionTransportistaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        validado:
+          type: boolean
+          example: true
+        estado:
+          type: string
+          maxLength: 30
+          example: "aprobado"
+        mensaje:
+          type: string
+          example: "Transportista validado correctamente"
+
+    ValidacionTransportistaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El RUC o la placa del vehículo no cumplen con el formato requerido."
+
+    ValidacionTransportistaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "TRANSPORTISTA_NO_VALIDO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El transportista no cumple con los requisitos legales u operativos para el despacho."

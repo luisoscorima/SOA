@@ -1,0 +1,143 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_FirmaDigitalPOD - API de App
+  description: |
+    Servicio encargado de registrar la firma digital como prueba de entrega (POD), generando evidencia asociada a la entrega realizada.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Utilidad
+
+    * **Justificación SOA:** Composibilidad, ya que puede integrarse en múltiples procesos de entrega, confirmación y auditoría.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/app
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /pod/firma-digital:
+    post:
+      summary: Registrar firma digital POD
+      description: Registra la firma digital del receptor como evidencia de entrega del pedido.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirmaDigitalPODRequest'
+            example:
+              id_entrega: "ENT-000125"
+              id_cliente: 150
+              nombre_receptor: "Luis Pérez"
+              documento_receptor: "45678912"
+              firma_base64: "iVBORw0KGgoAAAANSUhEUgAA..."
+      responses:
+        '200':
+          description: Firma digital registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseError400'
+        '409':
+          description: La entrega ya cuenta con evidencia registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseError409'
+
+components:
+  schemas:
+    FirmaDigitalPODRequest:
+      type: object
+      required:
+        - id_entrega
+        - nombre_receptor
+        - firma_base64
+      properties:
+        id_entrega:
+          type: string
+          maxLength: 50
+          description: "Código único de la entrega asociada a la firma digital."
+          example: "ENT-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente asociado a la entrega."
+          example: 150
+        nombre_receptor:
+          type: string
+          maxLength: 150
+          description: "Nombre completo de la persona que recibe el pedido."
+          example: "Luis Pérez"
+        documento_receptor:
+          type: string
+          maxLength: 20
+          description: "Documento de identidad de la persona receptora."
+          example: "45678912"
+        firma_base64:
+          type: string
+          description: "Imagen de la firma digital codificada en Base64."
+          example: "iVBORw0KGgoAAAANSUhEUgAA..."
+
+    FirmaDigitalPODResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_evidencia:
+          type: string
+          maxLength: 50
+          example: "POD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Firma digital POD registrada correctamente"
+
+    FirmaDigitalPODResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de firma digital es inválida o incompleta."
+
+    FirmaDigitalPODResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "EVIDENCIA_YA_REGISTRADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La entrega enviada ya cuenta con una evidencia POD registrada."

@@ -1,0 +1,149 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_EjecucionPicking - API de WMS
+  description: |
+    Servicio encargado de ejecutar el proceso de picking en el almacén, registrando los productos recolectados a partir de una lista de picking generada previamente.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Abstracción de la complejidad operativa del almacén.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/wms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /picking/ejecutar:
+    post:
+      summary: Ejecutar picking
+      description: Registra la ejecución de una lista de picking y confirma los productos recolectados en almacén.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EjecucionPickingRequest'
+            example:
+              id_lista_picking: "PICK-000789"
+              id_operario: "OP-001"
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  cantidad_recolectada: 120
+                  ubicacion: "PASILLO-03-NIVEL-02"
+      responses:
+        '200':
+          description: Picking ejecutado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseError400'
+        '404':
+          description: Lista de picking no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseError404'
+
+components:
+  schemas:
+    EjecucionPickingRequest:
+      type: object
+      required:
+        - id_lista_picking
+        - id_operario
+        - productos
+      properties:
+        id_lista_picking:
+          type: string
+          maxLength: 50
+          description: "Código único de la lista de picking a ejecutar."
+          example: "PICK-000789"
+        id_operario:
+          type: string
+          maxLength: 20
+          description: "Código del operario responsable de ejecutar el picking."
+          example: "OP-001"
+        productos:
+          type: array
+          description: "Listado de productos recolectados durante la ejecución del picking."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              cantidad_recolectada:
+                type: integer
+                minimum: 1
+                example: 120
+              ubicacion:
+                type: string
+                maxLength: 50
+                example: "PASILLO-03-NIVEL-02"
+
+    EjecucionPickingResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_ejecucion_picking:
+          type: string
+          maxLength: 50
+          example: "EJPICK-000456"
+        estado:
+          type: string
+          maxLength: 30
+          example: "completado"
+        mensaje:
+          type: string
+          example: "Picking ejecutado correctamente"
+
+    EjecucionPickingResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La lista de productos recolectados no puede estar vacía."
+
+    EjecucionPickingResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "LISTA_PICKING_NO_ENCONTRADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No existe una lista de picking registrada con el identificador enviado."

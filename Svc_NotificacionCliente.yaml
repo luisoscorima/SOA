@@ -1,0 +1,145 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_NotificacionCliente - API de Comunicación
+  description: |
+    Servicio encargado de enviar notificaciones al cliente sobre el estado de su pedido o despacho mediante aplicaciones móviles o SMS.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Utilidad
+
+    * **Justificación SOA:** Stateless, ya que permite escalar el envío de notificaciones para múltiples usuarios sin mantener estado de sesión.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/comunicacion
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /notificaciones/enviar:
+    post:
+      summary: Enviar notificación al cliente
+      description: Envía una notificación informativa al cliente mediante App móvil o SMS sobre el estado de su pedido.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificacionClienteRequest'
+            example:
+              id_pedido: "PED-000125"
+              id_cliente: 150
+              canal: "SMS"
+              estado_pedido: "en_ruta"
+              mensaje: "Su pedido se encuentra en camino."
+      responses:
+        '200':
+          description: Notificación enviada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseError400'
+        '404':
+          description: Cliente o pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseError404'
+
+components:
+  schemas:
+    NotificacionClienteRequest:
+      type: object
+      required:
+        - id_pedido
+        - id_cliente
+        - canal
+        - mensaje
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido asociado a la notificación."
+          example: "PED-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente que recibirá la notificación."
+          example: 150
+        canal:
+          type: string
+          maxLength: 20
+          description: "Canal de envío utilizado para la notificación."
+          example: "SMS"
+        estado_pedido:
+          type: string
+          maxLength: 50
+          description: "Estado actual del pedido informado al cliente."
+          example: "en_ruta"
+        mensaje:
+          type: string
+          maxLength: 250
+          description: "Contenido del mensaje enviado al cliente."
+          example: "Su pedido se encuentra en camino."
+
+    NotificacionClienteResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_notificacion:
+          type: string
+          maxLength: 50
+          example: "NOTIF-000321"
+        estado_envio:
+          type: string
+          maxLength: 30
+          example: "enviado"
+        mensaje:
+          type: string
+          example: "Notificación enviada correctamente"
+
+    NotificacionClienteResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El canal o contenido del mensaje enviado es inválido."
+
+    NotificacionClienteResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CLIENTE_O_PEDIDO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el cliente o pedido asociado a la notificación."

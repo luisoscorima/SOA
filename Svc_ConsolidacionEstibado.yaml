@@ -1,0 +1,152 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ConsolidacionEstibado - API de WMS
+  description: |
+    Servicio encargado de consolidar productos y generar pallets para despacho dentro del WMS, organizando físicamente la carga de acuerdo con criterios logísticos definidos.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Autonomía, ya que opera independientemente del resto del flujo logístico.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/wms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /consolidacion/estibar:
+    post:
+      summary: Consolidar y estibar productos
+      description: Recibe productos preparados y genera pallets organizados para despacho.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsolidacionEstibadoRequest'
+            example:
+              id_operacion: "OP-000321"
+              tipo_estibado: "despacho"
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  cantidad: 120
+                  peso_total: 350.5
+      responses:
+        '200':
+          description: Productos consolidados y estibados correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseError400'
+        '409':
+          description: Productos ya consolidados previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseError409'
+
+components:
+  schemas:
+    ConsolidacionEstibadoRequest:
+      type: object
+      required:
+        - id_operacion
+        - productos
+      properties:
+        id_operacion:
+          type: string
+          maxLength: 50
+          description: "Código único de la operación logística asociada."
+          example: "OP-000321"
+        tipo_estibado:
+          type: string
+          maxLength: 30
+          description: "Tipo de estibado aplicado a los productos."
+          example: "despacho"
+        productos:
+          type: array
+          description: "Listado de productos a consolidar y estibar."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              cantidad:
+                type: integer
+                minimum: 1
+                example: 120
+              peso_total:
+                type: number
+                format: float
+                minimum: 0
+                example: 350.5
+
+    ConsolidacionEstibadoResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_pallet:
+          type: string
+          maxLength: 50
+          example: "PALLET-000987"
+        cantidad_productos:
+          type: integer
+          example: 120
+        estado:
+          type: string
+          maxLength: 30
+          example: "estibado"
+        mensaje:
+          type: string
+          example: "Productos consolidados y estibados correctamente"
+
+    ConsolidacionEstibadoResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de productos enviada es inválida o incompleta."
+
+    ConsolidacionEstibadoResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PRODUCTOS_YA_ESTIBADOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Los productos enviados ya fueron asociados previamente a un pallet."

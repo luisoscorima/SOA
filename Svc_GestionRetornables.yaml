@@ -1,0 +1,146 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_GestionRetornables - API de Logística
+  description: |
+    Servicio encargado de gestionar el registro de envases retornables dentro del proceso logístico, permitiendo su control y trazabilidad en operaciones de logística inversa.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Entidad
+
+    * **Justificación SOA:** Reusabilidad, ya que aplica a procesos de logística inversa y control de envases retornables.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /retornables/registrar:
+    post:
+      summary: Registrar envases retornables
+      description: Registra los envases retornables asociados a una entrega o devolución logística.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GestionRetornablesRequest'
+            example:
+              id_entrega: "ENT-000125"
+              id_cliente: 150
+              envases:
+                - tipo_envase: "botella_retornable"
+                  cantidad: 24
+                  estado: "recibido"
+      responses:
+        '200':
+          description: Envases retornables registrados correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionRetornablesResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionRetornablesResponseError400'
+        '409':
+          description: Envases retornables ya registrados previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionRetornablesResponseError409'
+
+components:
+  schemas:
+    GestionRetornablesRequest:
+      type: object
+      required:
+        - id_entrega
+        - envases
+      properties:
+        id_entrega:
+          type: string
+          maxLength: 50
+          description: "Código único de la entrega o devolución asociada al registro de retornables."
+          example: "ENT-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente asociado a los envases retornables."
+          example: 150
+        envases:
+          type: array
+          description: "Listado de envases retornables registrados en el proceso logístico."
+          items:
+            type: object
+            properties:
+              tipo_envase:
+                type: string
+                maxLength: 50
+                example: "botella_retornable"
+              cantidad:
+                type: integer
+                minimum: 1
+                example: 24
+              estado:
+                type: string
+                maxLength: 30
+                example: "recibido"
+
+    GestionRetornablesResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_registro_retornable:
+          type: string
+          maxLength: 50
+          example: "RET-000321"
+        cantidad_envases:
+          type: integer
+          example: 24
+        mensaje:
+          type: string
+          example: "Envases retornables registrados correctamente"
+
+    GestionRetornablesResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de envases retornables es inválida o incompleta."
+
+    GestionRetornablesResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RETORNABLES_YA_REGISTRADOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Los envases retornables asociados a esta entrega ya fueron registrados previamente."

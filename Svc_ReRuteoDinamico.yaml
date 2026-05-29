@@ -1,0 +1,139 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ReRuteoDinamico - API de TMS
+  description: |
+    Servicio encargado de generar una nueva ruta de transporte a partir de una incidencia registrada, permitiendo adaptar dinámicamente el recorrido ante cambios operativos.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Adaptabilidad, ya que permite cambios dinámicos en la ruta ante incidencias logísticas.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/tms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /rutas/re-rutear:
+    post:
+      summary: Generar re-ruteo dinámico
+      description: Recibe una incidencia registrada y genera una nueva ruta alternativa para continuar el transporte.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReRuteoDinamicoRequest'
+            example:
+              id_incidencia: "INC-000456"
+              id_ruta_actual: "RUTA-000789"
+              id_vehiculo: "VEH-000321"
+              motivo: "bloqueo_vial"
+      responses:
+        '200':
+          description: Nueva ruta generada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReRuteoDinamicoResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReRuteoDinamicoResponseError400'
+        '404':
+          description: Incidencia o ruta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReRuteoDinamicoResponseError404'
+
+components:
+  schemas:
+    ReRuteoDinamicoRequest:
+      type: object
+      required:
+        - id_incidencia
+        - id_ruta_actual
+        - id_vehiculo
+      properties:
+        id_incidencia:
+          type: string
+          maxLength: 50
+          description: "Código único de la incidencia que origina el re-ruteo."
+          example: "INC-000456"
+        id_ruta_actual:
+          type: string
+          maxLength: 50
+          description: "Código de la ruta actual afectada por la incidencia."
+          example: "RUTA-000789"
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          description: "Código del vehículo que requiere una nueva ruta."
+          example: "VEH-000321"
+        motivo:
+          type: string
+          maxLength: 100
+          description: "Motivo operativo que justifica el re-ruteo."
+          example: "bloqueo_vial"
+
+    ReRuteoDinamicoResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_nueva_ruta:
+          type: string
+          maxLength: 50
+          example: "RUTA-000790"
+        estado:
+          type: string
+          maxLength: 30
+          example: "ruta_actualizada"
+        mensaje:
+          type: string
+          example: "Nueva ruta generada correctamente"
+
+    ReRuteoDinamicoResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de incidencia o ruta actual es inválida."
+
+    ReRuteoDinamicoResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "INCIDENCIA_O_RUTA_NO_ENCONTRADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró la incidencia o ruta asociada al re-ruteo solicitado."

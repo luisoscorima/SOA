@@ -1,0 +1,131 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ActivacionGPS - API de TMS
+  description: |
+    Servicio encargado de activar el seguimiento GPS de un vehículo dentro del TMS, permitiendo iniciar el monitoreo de su ubicación durante el proceso de transporte.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Utilidad
+
+    * **Justificación SOA:** Stateless, ya que no mantiene estado interno y procesa cada solicitud de activación de forma independiente.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/tms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /gps/activar:
+    post:
+      summary: Activar seguimiento GPS
+      description: Recibe los datos del vehículo y activa el seguimiento GPS para monitoreo logístico.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivacionGPSRequest'
+            example:
+              id_vehiculo: "VEH-000321"
+              placa_vehiculo: "ABC-123"
+              id_ruta: "RUTA-000789"
+      responses:
+        '200':
+          description: Seguimiento GPS activado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivacionGPSResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivacionGPSResponseError400'
+        '404':
+          description: Vehículo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivacionGPSResponseError404'
+
+components:
+  schemas:
+    ActivacionGPSRequest:
+      type: object
+      required:
+        - id_vehiculo
+        - placa_vehiculo
+      properties:
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          description: "Código único del vehículo que será monitoreado por GPS."
+          example: "VEH-000321"
+        placa_vehiculo:
+          type: string
+          maxLength: 10
+          description: "Placa del vehículo asociado al seguimiento."
+          example: "ABC-123"
+        id_ruta:
+          type: string
+          maxLength: 50
+          description: "Código de la ruta asociada al vehículo. Opcional."
+          example: "RUTA-000789"
+
+    ActivacionGPSResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        seguimiento_activo:
+          type: boolean
+          example: true
+        id_seguimiento:
+          type: string
+          maxLength: 50
+          example: "GPS-000456"
+        mensaje:
+          type: string
+          example: "Seguimiento GPS activado correctamente"
+
+    ActivacionGPSResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El identificador del vehículo o la placa no cumplen con el formato requerido."
+
+    ActivacionGPSResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "VEHICULO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró un vehículo registrado con los datos enviados."

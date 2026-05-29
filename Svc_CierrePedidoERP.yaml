@@ -1,0 +1,139 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_CierrePedidoERP - API de ERP
+  description: |
+    Servicio encargado de cerrar un pedido en el ERP una vez completado el proceso logístico, actualizando su estado comercial sin afectar directamente a otros sistemas.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Integración
+
+    * **Justificación SOA:** Bajo acoplamiento, ya que el ERP se actualiza de forma independiente sin afectar otros sistemas.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/erp
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /pedidos/cerrar:
+    post:
+      summary: Cerrar pedido ERP
+      description: Recibe la información del pedido completado y actualiza su estado como cerrado dentro del ERP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CierrePedidoERPRequest'
+            example:
+              id_pedido: "PED-000125"
+              estado_final: "cerrado"
+              fecha_cierre: "2026-05-29"
+              observacion: "Pedido entregado y liquidado correctamente."
+      responses:
+        '200':
+          description: Pedido cerrado correctamente en ERP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseError400'
+        '409':
+          description: Pedido ya cerrado previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseError409'
+
+components:
+  schemas:
+    CierrePedidoERPRequest:
+      type: object
+      required:
+        - id_pedido
+        - estado_final
+        - fecha_cierre
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido que será cerrado en el ERP."
+          example: "PED-000125"
+        estado_final:
+          type: string
+          maxLength: 30
+          description: "Estado final asignado al pedido dentro del ERP."
+          example: "cerrado"
+        fecha_cierre:
+          type: string
+          format: date
+          description: "Fecha de cierre del pedido."
+          example: "2026-05-29"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario adicional asociado al cierre del pedido."
+          example: "Pedido entregado y liquidado correctamente."
+
+    CierrePedidoERPResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_pedido:
+          type: string
+          maxLength: 50
+          example: "PED-000125"
+        estado:
+          type: string
+          maxLength: 30
+          example: "cerrado"
+        mensaje:
+          type: string
+          example: "Pedido cerrado correctamente en ERP"
+
+    CierrePedidoERPResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información enviada para el cierre del pedido es inválida o incompleta."
+
+    CierrePedidoERPResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PEDIDO_YA_CERRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El pedido enviado ya se encuentra cerrado en el ERP."

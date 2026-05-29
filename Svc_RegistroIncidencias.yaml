@@ -1,0 +1,146 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_RegistroIncidencias - API de TMS
+  description: |
+    Servicio encargado de registrar incidencias ocurridas durante el transporte, permitiendo documentar eventos operativos sin interrumpir el flujo principal del despacho.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Encapsulación, ya que maneja eventos e incidencias sin afectar el flujo principal del transporte.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/tms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /incidencias/registrar:
+    post:
+      summary: Registrar incidencia
+      description: Recibe un evento ocurrido durante el transporte y registra la incidencia asociada en el TMS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroIncidenciasRequest'
+            example:
+              id_ruta: "RUTA-000789"
+              id_vehiculo: "VEH-000321"
+              tipo_evento: "retraso"
+              descripcion: "Retraso por congestión vehicular en ruta."
+              severidad: "media"
+      responses:
+        '200':
+          description: Incidencia registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroIncidenciasResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroIncidenciasResponseError400'
+        '404':
+          description: Ruta o vehículo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistroIncidenciasResponseError404'
+
+components:
+  schemas:
+    RegistroIncidenciasRequest:
+      type: object
+      required:
+        - id_ruta
+        - id_vehiculo
+        - tipo_evento
+        - descripcion
+      properties:
+        id_ruta:
+          type: string
+          maxLength: 50
+          description: "Código de la ruta donde ocurrió la incidencia."
+          example: "RUTA-000789"
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          description: "Código del vehículo asociado a la incidencia."
+          example: "VEH-000321"
+        tipo_evento:
+          type: string
+          maxLength: 50
+          description: "Tipo de evento registrado durante el transporte."
+          example: "retraso"
+        descripcion:
+          type: string
+          maxLength: 250
+          description: "Descripción breve de la incidencia."
+          example: "Retraso por congestión vehicular en ruta."
+        severidad:
+          type: string
+          maxLength: 20
+          description: "Nivel de severidad de la incidencia."
+          example: "media"
+
+    RegistroIncidenciasResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_incidencia:
+          type: string
+          maxLength: 50
+          example: "INC-000456"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrada"
+        mensaje:
+          type: string
+          example: "Incidencia registrada correctamente"
+
+    RegistroIncidenciasResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La descripción de la incidencia no puede estar vacía."
+
+    RegistroIncidenciasResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RUTA_O_VEHICULO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró la ruta o el vehículo asociado a la incidencia."

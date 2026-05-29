@@ -1,0 +1,133 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ValidacionCliente - API de ERP
+  description: |
+    Servicio encargado de validar la información de clientes dentro del ERP, permitiendo confirmar su existencia y estado para procesos comerciales y logísticos.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Entidad
+
+    * **Justificación SOA:** Reusabilidad, ya que es utilizado en procesos de ventas, despacho y validación comercial.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/erp
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /clientes/validar:
+    post:
+      summary: Validar cliente
+      description: Verifica la existencia y validez de un cliente dentro del ERP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionClienteRequest'
+            example:
+              id_cliente: 150
+              documento: "20123456789"
+              tipo_cliente: "empresa"
+      responses:
+        '200':
+          description: Cliente validado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseError400'
+        '404':
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseError404'
+
+components:
+  schemas:
+    ValidacionClienteRequest:
+      type: object
+      required:
+        - id_cliente
+      properties:
+        id_cliente:
+          type: integer
+          description: "Identificador único del cliente en el ERP."
+          example: 150
+        documento:
+          type: string
+          maxLength: 20
+          description: "Número de documento o RUC del cliente."
+          example: "20123456789"
+        tipo_cliente:
+          type: string
+          maxLength: 30
+          description: "Clasificación comercial del cliente."
+          example: "empresa"
+
+    ValidacionClienteResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        cliente_validado:
+          type: boolean
+          example: true
+        estado_cliente:
+          type: string
+          maxLength: 30
+          example: "activo"
+        nombre_cliente:
+          type: string
+          maxLength: 150
+          example: "Comercial ABC SAC"
+        mensaje:
+          type: string
+          example: "Cliente validado correctamente"
+
+    ValidacionClienteResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El identificador o documento del cliente es inválido."
+
+    ValidacionClienteResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CLIENTE_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No existe un cliente registrado con los datos enviados."

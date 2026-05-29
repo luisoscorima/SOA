@@ -1,0 +1,182 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_GeneracionGuia - API de SUNAT
+  description: |
+    Servicio encargado de generar la guía de remisión electrónica a partir de los datos logísticos del despacho, integrándose con SUNAT para el cumplimiento tributario y documentario.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Integración
+
+    * **Justificación SOA:** Interoperabilidad mediante conexión con SUNAT. Bajo acoplamiento, ya que los cambios legales se encapsulan sin afectar directamente a otros sistemas.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/sunat
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /guias/generar:
+    post:
+      summary: Generar guía de remisión
+      description: Recibe los datos del despacho y genera una guía de remisión electrónica para SUNAT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneracionGuiaRequest'
+            example:
+              id_despacho: "DESP-000125"
+              ruc_emisor: "20548796321"
+              ruc_destinatario: "20123456789"
+              punto_partida: "ALM_LIMA"
+              punto_llegada: "CLIENTE_LIMA"
+              placa_vehiculo: "ABC-123"
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  descripcion: "Producto terminado 1.5L"
+                  cantidad: 120
+      responses:
+        '200':
+          description: Guía generada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseError400'
+        '409':
+          description: La guía ya fue generada previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseError409'
+
+components:
+  schemas:
+    GeneracionGuiaRequest:
+      type: object
+      required:
+        - id_despacho
+        - ruc_emisor
+        - ruc_destinatario
+        - punto_partida
+        - punto_llegada
+        - productos
+      properties:
+        id_despacho:
+          type: string
+          maxLength: 50
+          description: "Código único del despacho asociado a la guía."
+          example: "DESP-000125"
+        ruc_emisor:
+          type: string
+          minLength: 11
+          maxLength: 11
+          description: "RUC de la empresa emisora de la guía."
+          example: "20548796321"
+        ruc_destinatario:
+          type: string
+          minLength: 11
+          maxLength: 11
+          description: "RUC del destinatario de la mercancía."
+          example: "20123456789"
+        punto_partida:
+          type: string
+          maxLength: 100
+          description: "Ubicación o código del punto de partida del traslado."
+          example: "ALM_LIMA"
+        punto_llegada:
+          type: string
+          maxLength: 100
+          description: "Ubicación o código del punto de llegada del traslado."
+          example: "CLIENTE_LIMA"
+        placa_vehiculo:
+          type: string
+          maxLength: 10
+          description: "Placa del vehículo responsable del traslado."
+          example: "ABC-123"
+        productos:
+          type: array
+          description: "Listado de productos incluidos en la guía de remisión."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              descripcion:
+                type: string
+                maxLength: 200
+                example: "Producto terminado 1.5L"
+              cantidad:
+                type: integer
+                minimum: 1
+                example: 120
+
+    GeneracionGuiaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_guia:
+          type: string
+          maxLength: 50
+          example: "GRE-000789"
+        numero_guia:
+          type: string
+          maxLength: 50
+          example: "T001-00001234"
+        estado_sunat:
+          type: string
+          maxLength: 30
+          example: "generada"
+        mensaje:
+          type: string
+          example: "Guía de remisión generada correctamente"
+
+    GeneracionGuiaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Los datos tributarios o logísticos enviados son inválidos o incompletos."
+
+    GeneracionGuiaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "GUIA_YA_GENERADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El despacho enviado ya cuenta con una guía de remisión generada."

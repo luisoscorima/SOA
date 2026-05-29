@@ -1,0 +1,151 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_PlanificacionOleadas - API de WMS
+  description: |
+    Servicio encargado de planificar oleadas de trabajo en el WMS, agrupando pedidos según criterios logísticos para optimizar el proceso de preparación y despacho.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Reusabilidad para distintos tipos de pedidos y autonomía al encapsular la lógica de agrupación.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/wms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /oleadas/planificar:
+    post:
+      summary: Planificar oleada de pedidos
+      description: Recibe un conjunto de pedidos y genera órdenes agrupadas para su preparación en almacén.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OleadaRequest'
+            example:
+              id_almacen: "ALM_LIMA"
+              criterio_agrupacion: "zona_despacho"
+              pedidos:
+                - id_pedido: "PED-000125"
+                  prioridad: "alta"
+                  zona_despacho: "ZONA_NORTE"
+                - id_pedido: "PED-000126"
+                  prioridad: "media"
+                  zona_despacho: "ZONA_NORTE"
+      responses:
+        '200':
+          description: Oleada planificada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OleadaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OleadaResponseError400'
+        '409':
+          description: Los pedidos ya fueron agrupados previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OleadaResponseError409'
+
+components:
+  schemas:
+    OleadaRequest:
+      type: object
+      required:
+        - id_almacen
+        - criterio_agrupacion
+        - pedidos
+      properties:
+        id_almacen:
+          type: string
+          maxLength: 20
+          description: "Código del almacén donde se realizará la planificación de oleadas."
+          example: "ALM_LIMA"
+        criterio_agrupacion:
+          type: string
+          maxLength: 50
+          description: "Criterio utilizado para agrupar los pedidos."
+          example: "zona_despacho"
+        pedidos:
+          type: array
+          description: "Listado de pedidos pendientes de agrupación."
+          items:
+            type: object
+            properties:
+              id_pedido:
+                type: string
+                maxLength: 50
+                example: "PED-000125"
+              prioridad:
+                type: string
+                maxLength: 20
+                example: "alta"
+              zona_despacho:
+                type: string
+                maxLength: 50
+                example: "ZONA_NORTE"
+
+    OleadaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_oleada:
+          type: string
+          maxLength: 50
+          example: "OLE-000458"
+        cantidad_pedidos:
+          type: integer
+          example: 2
+        mensaje:
+          type: string
+          example: "Oleada planificada correctamente"
+
+    OleadaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La lista de pedidos no puede estar vacía."
+
+    OleadaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PEDIDOS_YA_AGRUPADOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Uno o más pedidos ya pertenecen a una oleada existente."

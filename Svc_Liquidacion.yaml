@@ -1,0 +1,166 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_Liquidacion - API de Admin
+  description: |
+    Servicio encargado de generar la liquidación administrativa del proceso logístico, consolidando documentos, valores cobrados, evidencias y registros asociados a la entrega.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Encapsulación, ya que consolida documentos y valores del proceso logístico en una operación administrativa.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/admin
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /liquidaciones/generar:
+    post:
+      summary: Generar liquidación
+      description: Consolida la información de una ruta, entrega o pedido para generar la liquidación administrativa correspondiente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LiquidacionRequest'
+            example:
+              id_ruta: "RUTA-000789"
+              id_repartidor: "REP-001"
+              fecha_liquidacion: "2026-05-29"
+              documentos:
+                - tipo_documento: "factura"
+                  numero_documento: "FAC-000125"
+              valores:
+                monto_cobrado: 1250.50
+                moneda: "PEN"
+      responses:
+        '200':
+          description: Liquidación generada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiquidacionResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiquidacionResponseError400'
+        '409':
+          description: Liquidación ya generada previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiquidacionResponseError409'
+
+components:
+  schemas:
+    LiquidacionRequest:
+      type: object
+      required:
+        - id_ruta
+        - id_repartidor
+        - fecha_liquidacion
+      properties:
+        id_ruta:
+          type: string
+          maxLength: 50
+          description: "Código único de la ruta asociada a la liquidación."
+          example: "RUTA-000789"
+        id_repartidor:
+          type: string
+          maxLength: 50
+          description: "Código del repartidor asociado al cierre de liquidación."
+          example: "REP-001"
+        fecha_liquidacion:
+          type: string
+          format: date
+          description: "Fecha en la que se genera la liquidación administrativa."
+          example: "2026-05-29"
+        documentos:
+          type: array
+          description: "Listado de documentos asociados a la liquidación."
+          items:
+            type: object
+            properties:
+              tipo_documento:
+                type: string
+                maxLength: 50
+                example: "factura"
+              numero_documento:
+                type: string
+                maxLength: 50
+                example: "FAC-000125"
+        valores:
+          type: object
+          description: "Detalle de valores económicos consolidados en la liquidación."
+          properties:
+            monto_cobrado:
+              type: number
+              format: float
+              minimum: 0
+              example: 1250.50
+            moneda:
+              type: string
+              maxLength: 10
+              example: "PEN"
+
+    LiquidacionResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_liquidacion:
+          type: string
+          maxLength: 50
+          example: "LIQ-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "generada"
+        mensaje:
+          type: string
+          example: "Liquidación generada correctamente"
+
+    LiquidacionResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información enviada para la liquidación es inválida o incompleta."
+
+    LiquidacionResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "LIQUIDACION_YA_GENERADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La ruta enviada ya cuenta con una liquidación generada previamente."

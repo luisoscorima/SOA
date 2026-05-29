@@ -1,0 +1,149 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_EscaneoCarga - API de Logística
+  description: |
+    Servicio encargado de registrar el escaneo de productos durante el proceso de carga, integrando la lectura física de códigos con los sistemas digitales de control logístico.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Interoperabilidad, ya que integra datos físicos capturados en almacén con sistemas digitales de logística.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /carga/escanear:
+    post:
+      summary: Escanear carga
+      description: Registra el escaneo de productos o pallets durante el proceso de carga logística.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscaneoCargaRequest'
+            example:
+              id_carga: "CARGA-000654"
+              id_operario: "OP-001"
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  codigo_lpn: "LPN-2026-000458"
+                  cantidad_escaneada: 120
+      responses:
+        '200':
+          description: Escaneo de carga registrado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseError400'
+        '409':
+          description: Producto o LPN ya escaneado previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseError409'
+
+components:
+  schemas:
+    EscaneoCargaRequest:
+      type: object
+      required:
+        - id_carga
+        - id_operario
+        - productos
+      properties:
+        id_carga:
+          type: string
+          maxLength: 50
+          description: "Código único de la carga asociada al proceso de escaneo."
+          example: "CARGA-000654"
+        id_operario:
+          type: string
+          maxLength: 20
+          description: "Código del operario responsable del escaneo."
+          example: "OP-001"
+        productos:
+          type: array
+          description: "Listado de productos o pallets escaneados durante la carga."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              codigo_lpn:
+                type: string
+                maxLength: 50
+                example: "LPN-2026-000458"
+              cantidad_escaneada:
+                type: integer
+                minimum: 1
+                example: 120
+
+    EscaneoCargaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_registro_escaneo:
+          type: string
+          maxLength: 50
+          example: "ESC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Escaneo de carga registrado correctamente"
+
+    EscaneoCargaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de productos escaneados es inválida o incompleta."
+
+    EscaneoCargaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PRODUCTO_YA_ESCANEADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Uno o más productos o códigos LPN ya fueron escaneados previamente."

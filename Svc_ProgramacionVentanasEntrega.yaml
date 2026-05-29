@@ -1,0 +1,148 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ProgramacionVentanasEntrega - API de Logística
+  description: |
+    Servicio encargado de programar ventanas de entrega para pedidos, gestionando horarios disponibles y disponibilidad de recepción del cliente.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Autonomía, ya que gestiona horarios de entrega y disponibilidad de recepción de manera independiente.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /entregas/ventanas/programar:
+    post:
+      summary: Programar ventana de entrega
+      description: Asigna un horario de entrega a un pedido según disponibilidad operativa y recepción del cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramacionVentanasEntregaRequest'
+            example:
+              id_pedido: "PED-000125"
+              id_cliente: 150
+              fecha_entrega: "2026-05-30"
+              ventana_preferida: "09:00-12:00"
+              direccion_entrega: "Av. Principal 123, Lima"
+      responses:
+        '200':
+          description: Ventana de entrega programada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError400'
+        '409':
+          description: No existe disponibilidad para la ventana solicitada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError409'
+
+components:
+  schemas:
+    ProgramacionVentanasEntregaRequest:
+      type: object
+      required:
+        - id_pedido
+        - id_cliente
+        - fecha_entrega
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido al que se asignará una ventana de entrega."
+          example: "PED-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente que recibirá el pedido."
+          example: 150
+        fecha_entrega:
+          type: string
+          format: date
+          description: "Fecha solicitada o programada para la entrega."
+          example: "2026-05-30"
+        ventana_preferida:
+          type: string
+          maxLength: 50
+          description: "Horario preferido para la recepción del pedido."
+          example: "09:00-12:00"
+        direccion_entrega:
+          type: string
+          maxLength: 200
+          description: "Dirección de entrega del pedido."
+          example: "Av. Principal 123, Lima"
+
+    ProgramacionVentanasEntregaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_programacion:
+          type: string
+          maxLength: 50
+          example: "VENT-000321"
+        horario_asignado:
+          type: string
+          maxLength: 50
+          example: "09:00-12:00"
+        estado:
+          type: string
+          maxLength: 30
+          example: "programado"
+        mensaje:
+          type: string
+          example: "Ventana de entrega programada correctamente"
+
+    ProgramacionVentanasEntregaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La fecha o ventana de entrega enviada es inválida."
+
+    ProgramacionVentanasEntregaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "VENTANA_NO_DISPONIBLE"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No existe disponibilidad para la ventana de entrega solicitada."

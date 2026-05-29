@@ -1,0 +1,132 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_EtiquetadoLPN - API de WMS
+  description: |
+    Servicio encargado de generar y asignar etiquetas LPN (License Plate Number) a pallets dentro del WMS, permitiendo una trazabilidad uniforme de las unidades logísticas.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Entidad
+
+    * **Justificación SOA:** Estandarización de la trazabilidad logística mediante códigos LPN únicos.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/wms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /lpn/generar:
+    post:
+      summary: Generar etiqueta LPN
+      description: Genera y asigna un código LPN único a un pallet registrado en el sistema.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtiquetadoLPNRequest'
+            example:
+              id_pallet: "PALLET-000987"
+              tipo_pallet: "despacho"
+              id_almacen: "ALM_LIMA"
+      responses:
+        '200':
+          description: Código LPN generado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseError400'
+        '409':
+          description: El pallet ya cuenta con un código LPN asignado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseError409'
+
+components:
+  schemas:
+    EtiquetadoLPNRequest:
+      type: object
+      required:
+        - id_pallet
+        - id_almacen
+      properties:
+        id_pallet:
+          type: string
+          maxLength: 50
+          description: "Código único del pallet al que se asignará el LPN."
+          example: "PALLET-000987"
+        tipo_pallet:
+          type: string
+          maxLength: 30
+          description: "Clasificación logística del pallet."
+          example: "despacho"
+        id_almacen:
+          type: string
+          maxLength: 20
+          description: "Código del almacén donde se encuentra el pallet."
+          example: "ALM_LIMA"
+
+    EtiquetadoLPNResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        codigo_lpn:
+          type: string
+          maxLength: 50
+          example: "LPN-2026-000458"
+        id_pallet:
+          type: string
+          maxLength: 50
+          example: "PALLET-000987"
+        mensaje:
+          type: string
+          example: "Código LPN generado correctamente"
+
+    EtiquetadoLPNResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El identificador del pallet no cumple con el formato requerido."
+
+    EtiquetadoLPNResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "LPN_YA_EXISTENTE"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El pallet ya tiene un código LPN asignado."

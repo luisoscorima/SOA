@@ -1,0 +1,146 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_RetornoCD - API de Logística
+  description: |
+    Servicio encargado de registrar el retorno del vehículo al centro de distribución, permitiendo cerrar el flujo logístico posterior a la entrega.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Autonomía, ya que representa un flujo independiente de cierre logístico.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /retornos/centro-distribucion:
+    post:
+      summary: Registrar retorno a centro de distribución
+      description: Registra la llegada del vehículo al centro de distribución luego de completar la ruta de entrega.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetornoCDRequest'
+            example:
+              id_vehiculo: "VEH-000321"
+              placa_vehiculo: "ABC-123"
+              id_ruta: "RUTA-000789"
+              id_centro_distribucion: "CD_PUCUSANA"
+              hora_llegada: "2026-05-29T18:30:00"
+      responses:
+        '200':
+          description: Retorno registrado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseError400'
+        '409':
+          description: Retorno ya registrado previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseError409'
+
+components:
+  schemas:
+    RetornoCDRequest:
+      type: object
+      required:
+        - id_vehiculo
+        - id_ruta
+        - id_centro_distribucion
+        - hora_llegada
+      properties:
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          description: "Código único del vehículo que retorna al centro de distribución."
+          example: "VEH-000321"
+        placa_vehiculo:
+          type: string
+          maxLength: 10
+          description: "Placa del vehículo que retorna al centro de distribución."
+          example: "ABC-123"
+        id_ruta:
+          type: string
+          maxLength: 50
+          description: "Código de la ruta finalizada por el vehículo."
+          example: "RUTA-000789"
+        id_centro_distribucion:
+          type: string
+          maxLength: 50
+          description: "Código del centro de distribución al que retorna el vehículo."
+          example: "CD_PUCUSANA"
+        hora_llegada:
+          type: string
+          format: date-time
+          description: "Fecha y hora de llegada del vehículo al centro de distribución."
+          example: "2026-05-29T18:30:00"
+
+    RetornoCDResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_retorno:
+          type: string
+          maxLength: 50
+          example: "RETCD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "retornado"
+        mensaje:
+          type: string
+          example: "Retorno al centro de distribución registrado correctamente"
+
+    RetornoCDResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de retorno enviada es inválida o incompleta."
+
+    RetornoCDResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RETORNO_YA_REGISTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El vehículo ya cuenta con un retorno registrado para la ruta indicada."

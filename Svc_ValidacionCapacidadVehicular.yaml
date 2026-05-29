@@ -1,0 +1,140 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ValidacionCapacidadVehicular - API de TMS
+  description: |
+    Servicio encargado de validar la capacidad vehicular antes de la carga, verificando que el peso y volumen de la mercancía cumplan con los límites físicos del vehículo asignado.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Garantiza que la carga cumpla con los límites físicos de peso y volumen del vehículo.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/tms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /vehiculos/capacidad/validar:
+    post:
+      summary: Validar capacidad vehicular
+      description: Valida si el peso y volumen de la carga pueden ser transportados por el vehículo asignado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionCapacidadVehicularRequest'
+            example:
+              id_vehiculo: "VEH-000321"
+              peso_total_kg: 3500.75
+              volumen_total_m3: 18.5
+              id_despacho: "DESP-000125"
+      responses:
+        '200':
+          description: Capacidad vehicular validada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseError400'
+        '409':
+          description: La carga excede la capacidad del vehículo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseError409'
+
+components:
+  schemas:
+    ValidacionCapacidadVehicularRequest:
+      type: object
+      required:
+        - id_vehiculo
+        - peso_total_kg
+        - volumen_total_m3
+      properties:
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          description: "Código único del vehículo asignado al transporte."
+          example: "VEH-000321"
+        peso_total_kg:
+          type: number
+          format: float
+          minimum: 0
+          description: "Peso total de la carga expresado en kilogramos."
+          example: 3500.75
+        volumen_total_m3:
+          type: number
+          format: float
+          minimum: 0
+          description: "Volumen total de la carga expresado en metros cúbicos."
+          example: 18.5
+        id_despacho:
+          type: string
+          maxLength: 50
+          description: "Código del despacho asociado a la validación de capacidad."
+          example: "DESP-000125"
+
+    ValidacionCapacidadVehicularResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        capacidad_valida:
+          type: boolean
+          example: true
+        estado:
+          type: string
+          maxLength: 30
+          example: "aprobado"
+        mensaje:
+          type: string
+          example: "La carga cumple con la capacidad permitida del vehículo"
+
+    ValidacionCapacidadVehicularResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El peso o volumen enviado no cumple con el formato requerido."
+
+    ValidacionCapacidadVehicularResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CAPACIDAD_EXCEDIDA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La carga excede el peso o volumen máximo permitido para el vehículo asignado."

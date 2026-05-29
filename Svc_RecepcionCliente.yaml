@@ -1,0 +1,144 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_RecepcionCliente - API de Cliente
+  description: |
+    Servicio encargado de registrar la recepción del pedido por parte del cliente, integrando la confirmación del cliente al flujo digital del sistema.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Interoperabilidad, ya que integra la confirmación del cliente al sistema logístico y comercial.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/cliente
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /recepciones/confirmar:
+    post:
+      summary: Confirmar recepción de pedido
+      description: Registra la confirmación de recepción del pedido realizada por el cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecepcionClienteRequest'
+            example:
+              id_pedido: "PED-000125"
+              id_cliente: 150
+              id_entrega: "ENT-000125"
+              estado_recepcion: "recibido"
+              observacion: "Pedido recibido conforme."
+      responses:
+        '200':
+          description: Recepción confirmada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseError400'
+        '409':
+          description: Recepción ya confirmada previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseError409'
+
+components:
+  schemas:
+    RecepcionClienteRequest:
+      type: object
+      required:
+        - id_pedido
+        - id_cliente
+        - estado_recepcion
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido recibido por el cliente."
+          example: "PED-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente que confirma la recepción."
+          example: 150
+        id_entrega:
+          type: string
+          maxLength: 50
+          description: "Código de la entrega asociada al pedido."
+          example: "ENT-000125"
+        estado_recepcion:
+          type: string
+          maxLength: 30
+          description: "Estado de recepción declarado por el cliente."
+          example: "recibido"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario adicional registrado por el cliente."
+          example: "Pedido recibido conforme."
+
+    RecepcionClienteResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_confirmacion:
+          type: string
+          maxLength: 50
+          example: "CONF-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "confirmado"
+        mensaje:
+          type: string
+          example: "Recepción del pedido confirmada correctamente"
+
+    RecepcionClienteResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de recepción enviada es inválida o incompleta."
+
+    RecepcionClienteResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECEPCION_YA_CONFIRMADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El pedido enviado ya cuenta con una recepción confirmada previamente."

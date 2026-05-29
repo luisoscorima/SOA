@@ -1,0 +1,154 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_CorreccionCarga - API de Logística
+  description: |
+    Servicio encargado de corregir errores detectados durante el proceso de carga logística, permitiendo ajustar registros de productos, pallets o cantidades antes del despacho final.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Resiliencia, ya que permite la recuperación del proceso ante errores operativos o inconsistencias de carga.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /carga/corregir:
+    post:
+      summary: Corregir carga logística
+      description: Recibe el error detectado en la carga y registra la corrección correspondiente en el sistema logístico.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorreccionCargaRequest'
+            example:
+              id_carga: "CARGA-000654"
+              id_error: "ERR-000125"
+              tipo_error: "cantidad_incorrecta"
+              correccion:
+                id_producto: "SKU_IK_1.5L"
+                cantidad_correcta: 118
+                observacion: "Se ajusta cantidad por diferencia detectada en escaneo."
+      responses:
+        '200':
+          description: Corrección de carga registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseError400'
+        '404':
+          description: Error o carga no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseError404'
+
+components:
+  schemas:
+    CorreccionCargaRequest:
+      type: object
+      required:
+        - id_carga
+        - id_error
+        - tipo_error
+        - correccion
+      properties:
+        id_carga:
+          type: string
+          maxLength: 50
+          description: "Código único de la carga donde se detectó el error."
+          example: "CARGA-000654"
+        id_error:
+          type: string
+          maxLength: 50
+          description: "Código único del error registrado durante el proceso de carga."
+          example: "ERR-000125"
+        tipo_error:
+          type: string
+          maxLength: 50
+          description: "Tipo de error detectado en la carga."
+          example: "cantidad_incorrecta"
+        correccion:
+          type: object
+          description: "Detalle de la corrección aplicada al error registrado."
+          properties:
+            id_producto:
+              type: string
+              maxLength: 50
+              example: "SKU_IK_1.5L"
+            cantidad_correcta:
+              type: integer
+              minimum: 0
+              example: 118
+            observacion:
+              type: string
+              maxLength: 250
+              example: "Se ajusta cantidad por diferencia detectada en escaneo."
+
+    CorreccionCargaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_correccion:
+          type: string
+          maxLength: 50
+          example: "CORR-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "corregido"
+        mensaje:
+          type: string
+          example: "Corrección de carga registrada correctamente"
+
+    CorreccionCargaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de corrección enviada es inválida o incompleta."
+
+    CorreccionCargaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CARGA_O_ERROR_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró la carga o el error asociado a la corrección solicitada."

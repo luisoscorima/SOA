@@ -1,0 +1,145 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_GestionMantenimientoVehicular - API de Flota
+  description: |
+    Servicio encargado de gestionar el mantenimiento vehicular, centralizando la disponibilidad y el estado operativo de la flota.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Entidad
+
+    * **Justificación SOA:** Centraliza la disponibilidad y el estado operativo de la flota vehicular.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/flota
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /mantenimiento/vehicular/estado:
+    post:
+      summary: Registrar estado de mantenimiento vehicular
+      description: Registra o actualiza el estado de mantenimiento de un vehículo de la flota.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GestionMantenimientoVehicularRequest'
+            example:
+              id_vehiculo: "VEH-000321"
+              placa_vehiculo: "ABC-123"
+              estado_mantenimiento: "operativo"
+              fecha_revision: "2026-05-29"
+              observacion: "Vehículo disponible para ruta."
+      responses:
+        '200':
+          description: Estado de mantenimiento actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseError400'
+        '404':
+          description: Vehículo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseError404'
+
+components:
+  schemas:
+    GestionMantenimientoVehicularRequest:
+      type: object
+      required:
+        - id_vehiculo
+        - estado_mantenimiento
+        - fecha_revision
+      properties:
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          description: "Código único del vehículo registrado en la flota."
+          example: "VEH-000321"
+        placa_vehiculo:
+          type: string
+          maxLength: 10
+          description: "Placa del vehículo asociado al mantenimiento."
+          example: "ABC-123"
+        estado_mantenimiento:
+          type: string
+          maxLength: 30
+          description: "Estado operativo o de mantenimiento del vehículo."
+          example: "operativo"
+        fecha_revision:
+          type: string
+          format: date
+          description: "Fecha de revisión del estado de mantenimiento."
+          example: "2026-05-29"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario adicional sobre el estado del vehículo."
+          example: "Vehículo disponible para ruta."
+
+    GestionMantenimientoVehicularResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_registro_mantenimiento:
+          type: string
+          maxLength: 50
+          example: "MANT-000321"
+        estado_mantenimiento:
+          type: string
+          maxLength: 30
+          example: "operativo"
+        mensaje:
+          type: string
+          example: "Estado de mantenimiento vehicular actualizado correctamente"
+
+    GestionMantenimientoVehicularResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de mantenimiento enviada es inválida o incompleta."
+
+    GestionMantenimientoVehicularResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "VEHICULO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No existe un vehículo registrado con el identificador enviado."

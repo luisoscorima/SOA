@@ -1,0 +1,155 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ValidacionInventario - API de WMS
+  description: |
+    Servicio encargado de validar la disponibilidad de stock en el WMS, confirmando si existe inventario suficiente para atender procesos de venta o logística.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Interoperabilidad, al ser compartido entre ERP y WMS. Reusabilidad, al ser utilizado en procesos de ventas y logística.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/wms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /inventario/validar:
+    get:
+      summary: Validar inventario disponible
+      description: Consulta el stock disponible de un producto y confirma si puede atender la cantidad solicitada.
+      parameters:
+        - name: id_producto
+          in: query
+          required: true
+          description: Código único del producto a validar.
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 50
+            example: "SKU_IK_1.5L"
+        - name: cantidad
+          in: query
+          required: true
+          description: Cantidad solicitada para validar disponibilidad.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            example: 120
+        - name: id_almacen
+          in: query
+          required: false
+          description: Código del almacén donde se validará el inventario.
+          schema:
+            type: string
+            maxLength: 20
+            example: "ALM_LIMA"
+      responses:
+        '200':
+          description: Inventario validado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventarioResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventarioResponseError400'
+        '404':
+          description: Producto no encontrado en inventario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventarioResponseError404'
+
+components:
+  schemas:
+    InventarioRequest:
+      type: object
+      required:
+        - id_producto
+        - cantidad
+      properties:
+        id_producto:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: "Código único del producto a validar."
+          example: "SKU_IK_1.5L"
+        cantidad:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: "Cantidad solicitada para validar disponibilidad."
+          example: 120
+        id_almacen:
+          type: string
+          maxLength: 20
+          description: "Código del almacén donde se realizará la validación. Opcional."
+          example: "ALM_LIMA"
+
+    InventarioResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        disponible:
+          type: boolean
+          example: true
+        stock_actual:
+          type: integer
+          minimum: 0
+          example: 350
+        confirmacion:
+          type: string
+          maxLength: 100
+          example: "Stock disponible para atender la solicitud"
+        id_producto:
+          type: string
+          maxLength: 50
+          example: "SKU_IK_1.5L"
+
+    InventarioResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La cantidad solicitada debe ser mayor a cero."
+
+    InventarioResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PRODUCTO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró stock registrado para el producto solicitado."

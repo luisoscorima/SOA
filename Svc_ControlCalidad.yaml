@@ -1,0 +1,157 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ControlCalidad - API de WMS
+  description: |
+    Servicio encargado de realizar el control de calidad de productos en el WMS, validando su estado antes de continuar con el proceso logístico correspondiente.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Reusabilidad, ya que puede aplicarse en múltiples procesos logísticos.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/wms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /calidad/validar-productos:
+    post:
+      summary: Validar calidad de productos
+      description: Recibe productos y registra su validación de calidad dentro del proceso logístico.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlCalidadRequest'
+            example:
+              id_proceso: "PROC-000125"
+              tipo_proceso: "picking"
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  lote: "LOT-2026-001"
+                  cantidad: 120
+                  estado_calidad: "aprobado"
+      responses:
+        '200':
+          description: Productos validados correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlCalidadResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlCalidadResponseError400'
+        '409':
+          description: Productos ya validados previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlCalidadResponseError409'
+
+components:
+  schemas:
+    ControlCalidadRequest:
+      type: object
+      required:
+        - id_proceso
+        - tipo_proceso
+        - productos
+      properties:
+        id_proceso:
+          type: string
+          maxLength: 50
+          description: "Código del proceso logístico asociado al control de calidad."
+          example: "PROC-000125"
+        tipo_proceso:
+          type: string
+          maxLength: 30
+          description: "Tipo de proceso donde se aplica el control de calidad."
+          example: "picking"
+        productos:
+          type: array
+          description: "Listado de productos que serán validados."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              lote:
+                type: string
+                maxLength: 50
+                example: "LOT-2026-001"
+              cantidad:
+                type: integer
+                minimum: 1
+                example: 120
+              estado_calidad:
+                type: string
+                maxLength: 30
+                example: "aprobado"
+
+    ControlCalidadResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_control_calidad:
+          type: string
+          maxLength: 50
+          example: "CC-000458"
+        productos_validados:
+          type: integer
+          example: 1
+        resultado:
+          type: string
+          maxLength: 30
+          example: "aprobado"
+        mensaje:
+          type: string
+          example: "Productos validados correctamente"
+
+    ControlCalidadResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La lista de productos no puede estar vacía."
+
+    ControlCalidadResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PRODUCTOS_YA_VALIDADOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Uno o más productos ya fueron validados previamente."

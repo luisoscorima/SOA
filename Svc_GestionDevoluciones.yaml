@@ -1,0 +1,160 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_GestionDevoluciones - API de Logística
+  description: |
+    Servicio encargado de gestionar devoluciones dentro del proceso logístico, registrando productos devueltos, motivos e incidencias asociadas a la logística inversa.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Encapsula procesos de logística inversa y atención de incidencias.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /devoluciones/registrar:
+    post:
+      summary: Registrar devolución
+      description: Registra una devolución de productos asociada a una entrega o pedido.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GestionDevolucionesRequest'
+            example:
+              id_pedido: "PED-000125"
+              id_entrega: "ENT-000125"
+              id_cliente: 150
+              motivo_devolucion: "producto_dañado"
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  cantidad_devuelta: 10
+                  estado_producto: "dañado"
+      responses:
+        '200':
+          description: Devolución registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseError400'
+        '409':
+          description: Devolución ya registrada previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseError409'
+
+components:
+  schemas:
+    GestionDevolucionesRequest:
+      type: object
+      required:
+        - id_pedido
+        - motivo_devolucion
+        - productos
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido asociado a la devolución."
+          example: "PED-000125"
+        id_entrega:
+          type: string
+          maxLength: 50
+          description: "Código de la entrega donde se originó la devolución."
+          example: "ENT-000125"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente que realiza la devolución."
+          example: 150
+        motivo_devolucion:
+          type: string
+          maxLength: 100
+          description: "Motivo principal de la devolución registrada."
+          example: "producto_dañado"
+        productos:
+          type: array
+          description: "Listado de productos devueltos."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              cantidad_devuelta:
+                type: integer
+                minimum: 1
+                example: 10
+              estado_producto:
+                type: string
+                maxLength: 50
+                example: "dañado"
+
+    GestionDevolucionesResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_devolucion:
+          type: string
+          maxLength: 50
+          example: "DEV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrada"
+        mensaje:
+          type: string
+          example: "Devolución registrada correctamente"
+
+    GestionDevolucionesResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información de devolución enviada es inválida o incompleta."
+
+    GestionDevolucionesResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DEVOLUCION_YA_REGISTRADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El pedido enviado ya cuenta con una devolución registrada previamente."

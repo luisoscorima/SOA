@@ -1,0 +1,139 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_AsignacionBahia - API de Logística
+  description: |
+    Servicio encargado de asignar una bahía de carga o despacho a un pedido, optimizando la organización operativa dentro del proceso logístico.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Autonomía, ya que encapsula una lógica independiente de asignación de bahías.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /bahias/asignar:
+    post:
+      summary: Asignar bahía a pedido
+      description: Recibe un pedido y asigna una bahía disponible para el proceso de carga o despacho.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionBahiaRequest'
+            example:
+              id_pedido: "PED-000125"
+              id_almacen: "ALM_LIMA"
+              tipo_operacion: "despacho"
+              prioridad: "alta"
+      responses:
+        '200':
+          description: Bahía asignada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseError400'
+        '409':
+          description: No existen bahías disponibles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseError409'
+
+components:
+  schemas:
+    AsignacionBahiaRequest:
+      type: object
+      required:
+        - id_pedido
+        - id_almacen
+        - tipo_operacion
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido que requiere asignación de bahía."
+          example: "PED-000125"
+        id_almacen:
+          type: string
+          maxLength: 20
+          description: "Código del almacén o centro logístico donde se realizará la operación."
+          example: "ALM_LIMA"
+        tipo_operacion:
+          type: string
+          maxLength: 30
+          description: "Tipo de operación logística asociada a la bahía."
+          example: "despacho"
+        prioridad:
+          type: string
+          maxLength: 20
+          description: "Nivel de prioridad del pedido para la asignación."
+          example: "alta"
+
+    AsignacionBahiaResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_bahia:
+          type: string
+          maxLength: 30
+          example: "BAHIA-04"
+        estado_bahia:
+          type: string
+          maxLength: 30
+          example: "asignada"
+        mensaje:
+          type: string
+          example: "Bahía asignada correctamente al pedido"
+
+    AsignacionBahiaResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El identificador del pedido o almacén no cumple con el formato requerido."
+
+    AsignacionBahiaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "BAHIA_NO_DISPONIBLE"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No existen bahías disponibles para la operación solicitada."

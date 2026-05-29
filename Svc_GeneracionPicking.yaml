@@ -1,0 +1,149 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_GeneracionPicking - API de WMS
+  description: |
+    Servicio encargado de generar listas de picking a partir de pedidos registrados en el WMS, centralizando la lógica de preparación de productos para despacho.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Encapsulación de la lógica de generación de listas de picking.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/wms
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /picking/generar:
+    post:
+      summary: Generar lista de picking
+      description: Recibe un pedido y genera una lista de picking con los productos, cantidades y ubicaciones requeridas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickingRequest'
+            example:
+              id_pedido: "PED-000125"
+              id_almacen: "ALM_LIMA"
+              prioridad: "alta"
+      responses:
+        '200':
+          description: Lista de picking generada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickingResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickingResponseError400'
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickingResponseError404'
+
+components:
+  schemas:
+    PickingRequest:
+      type: object
+      required:
+        - id_pedido
+        - id_almacen
+      properties:
+        id_pedido:
+          type: string
+          maxLength: 50
+          description: "Código único del pedido para el cual se generará la lista de picking."
+          example: "PED-000125"
+        id_almacen:
+          type: string
+          maxLength: 20
+          description: "Código del almacén desde donde se preparará el pedido."
+          example: "ALM_LIMA"
+        prioridad:
+          type: string
+          maxLength: 20
+          description: "Nivel de prioridad asignado al pedido."
+          example: "alta"
+
+    PickingResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_lista_picking:
+          type: string
+          maxLength: 50
+          example: "PICK-000789"
+        id_pedido:
+          type: string
+          maxLength: 50
+          example: "PED-000125"
+        items:
+          type: array
+          description: "Detalle de productos incluidos en la lista de picking."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              cantidad:
+                type: integer
+                example: 120
+              ubicacion:
+                type: string
+                maxLength: 50
+                example: "PASILLO-03-NIVEL-02"
+        mensaje:
+          type: string
+          example: "Lista de picking generada correctamente"
+
+    PickingResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El identificador del pedido o almacén no cumple con el formato requerido."
+
+    PickingResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "PEDIDO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No existe un pedido registrado con el identificador enviado."

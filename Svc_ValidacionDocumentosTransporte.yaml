@@ -1,0 +1,144 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_ValidacionDocumentosTransporte - API de Logística
+  description: |
+    Servicio encargado de validar los documentos de transporte antes del despacho, verificando la integridad y consistencia documentaria requerida para la operación logística.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Encapsulación, ya que centraliza las validaciones documentarias previas al despacho.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/logistica
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /documentos-transporte/validar:
+    post:
+      summary: Validar documentos de transporte
+      description: Verifica la validez de los documentos requeridos antes de autorizar el despacho logístico.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionDocumentosTransporteRequest'
+            example:
+              id_despacho: "DESP-000125"
+              id_transportista: "TR-000125"
+              documentos:
+                - tipo_documento: "guia_remision"
+                  numero_documento: "T001-00001234"
+                - tipo_documento: "licencia_conducir"
+                  numero_documento: "Q12345678"
+      responses:
+        '200':
+          description: Documentos validados correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseError400'
+        '409':
+          description: Documentos inválidos o incompletos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseError409'
+
+components:
+  schemas:
+    ValidacionDocumentosTransporteRequest:
+      type: object
+      required:
+        - id_despacho
+        - documentos
+      properties:
+        id_despacho:
+          type: string
+          maxLength: 50
+          description: "Código único del despacho asociado a la validación."
+          example: "DESP-000125"
+        id_transportista:
+          type: string
+          maxLength: 50
+          description: "Código del transportista asociado al despacho."
+          example: "TR-000125"
+        documentos:
+          type: array
+          description: "Listado de documentos que serán validados antes del despacho."
+          items:
+            type: object
+            properties:
+              tipo_documento:
+                type: string
+                maxLength: 50
+                example: "guia_remision"
+              numero_documento:
+                type: string
+                maxLength: 50
+                example: "T001-00001234"
+
+    ValidacionDocumentosTransporteResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        validacion_correcta:
+          type: boolean
+          example: true
+        estado:
+          type: string
+          maxLength: 30
+          example: "documentos_validados"
+        mensaje:
+          type: string
+          example: "Documentos de transporte validados correctamente"
+
+    ValidacionDocumentosTransporteResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La información documentaria enviada es inválida o incompleta."
+
+    ValidacionDocumentosTransporteResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DOCUMENTOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "Uno o más documentos requeridos no son válidos o se encuentran vencidos."

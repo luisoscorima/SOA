@@ -1,0 +1,149 @@
+openapi: 3.0.0
+
+info:
+  title: Svc_DescargaProductos - API de Repartidor
+  description: |
+    Servicio encargado de registrar la descarga de productos en el punto de entrega, representando la entrega física de mercancía como una operación lógica del sistema.
+
+    ---
+
+    **Información Técnica del Servicio:**
+
+    * **Protocolo:** REST / HTTPS / JSON
+
+    * **Puerto del protocolo:** 8081 (Entorno Local)
+
+    * **Tipo de servicio:** Tarea
+
+    * **Justificación SOA:** Abstracción, ya que representa la entrega física de mercancía como un servicio lógico.
+
+    ---
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081/api/repartidor
+    description: Servidor Local de Desarrollo (Puerto 8081)
+
+paths:
+  /productos/descargar:
+    post:
+      summary: Descargar productos
+      description: Registra la descarga de mercancía realizada por el repartidor en el punto de entrega.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DescargaProductosRequest'
+            example:
+              id_entrega: "ENT-000125"
+              id_repartidor: "REP-001"
+              id_cliente: 150
+              productos:
+                - id_producto: "SKU_IK_1.5L"
+                  cantidad_descargada: 120
+      responses:
+        '200':
+          description: Descarga de productos registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseExito'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseError400'
+        '404':
+          description: Entrega no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseError404'
+
+components:
+  schemas:
+    DescargaProductosRequest:
+      type: object
+      required:
+        - id_entrega
+        - id_repartidor
+        - productos
+      properties:
+        id_entrega:
+          type: string
+          maxLength: 50
+          description: "Código único de la entrega asociada a la descarga."
+          example: "ENT-000125"
+        id_repartidor:
+          type: string
+          maxLength: 50
+          description: "Código del repartidor responsable de la descarga."
+          example: "REP-001"
+        id_cliente:
+          type: integer
+          description: "Identificador del cliente que recibe la mercancía."
+          example: 150
+        productos:
+          type: array
+          description: "Listado de productos descargados en el punto de entrega."
+          items:
+            type: object
+            properties:
+              id_producto:
+                type: string
+                maxLength: 50
+                example: "SKU_IK_1.5L"
+              cantidad_descargada:
+                type: integer
+                minimum: 1
+                example: 120
+
+    DescargaProductosResponseExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_descarga:
+          type: string
+          maxLength: 50
+          example: "DESC-000321"
+        estado_entrega:
+          type: string
+          maxLength: 30
+          example: "descargado"
+        mensaje:
+          type: string
+          example: "Descarga de productos registrada correctamente"
+
+    DescargaProductosResponseError400:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "DATOS_INVALIDOS"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "La lista de productos descargados es inválida o incompleta."
+
+    DescargaProductosResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "ENTREGA_NO_ENCONTRADA"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró una entrega registrada con el identificador enviado."

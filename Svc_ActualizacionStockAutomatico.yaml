@@ -127,7 +127,7 @@ paths:
         - Integración
       operationId: actualizarMovimientoStock
       summary: Actualizar movimiento de stock
-      description: Actualiza o corrige el estado de un movimiento existente. Para anular, envíe estado: anulado.
+      description: "Actualiza o corrige el estado de un movimiento existente. Para anular, envíe estado anulado."
       parameters:
         - name: id_movimiento
           in: path

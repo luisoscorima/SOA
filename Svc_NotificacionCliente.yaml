@@ -122,7 +122,7 @@ paths:
         - Comunicación
       operationId: actualizarNotificacionCliente
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
+      description: "Actualiza o corrige el estado de un registro existente. Para anular, envíe estado anulado."
       parameters:
         - name: id_notificacion
           in: path

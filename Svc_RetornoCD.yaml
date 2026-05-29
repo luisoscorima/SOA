@@ -77,7 +77,6 @@ paths:
                 error: "RETORNO_YA_REGISTRADO"
                 detalle: "El vehículo ya cuenta con un retorno registrado para la ruta indicada."
 
-  /r
   /retornos/{id_retorno}:
     get:
       tags:

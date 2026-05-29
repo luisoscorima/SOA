@@ -78,7 +78,6 @@ paths:
                 error: "VENTANA_NO_DISPONIBLE"
                 detalle: "No existe disponibilidad para la ventana de entrega solicitada."
 
-  /e
   /entregas/ventanas/{id_ventana}:
     get:
       tags:

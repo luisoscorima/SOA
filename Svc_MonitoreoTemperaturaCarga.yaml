@@ -77,7 +77,6 @@ paths:
                 error: "TEMPERATURA_FUERA_DE_RANGO"
                 detalle: "La temperatura registrada excede los límites permitidos para la carga."
 
-  /t
   /temperatura/monitoreos/{id_monitoreo}:
     get:
       tags:

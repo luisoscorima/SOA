@@ -76,7 +76,6 @@ paths:
                 error: "CAPACIDAD_EXCEDIDA"
                 detalle: "La carga excede el peso o volumen máximo permitido para el vehículo asignado."
 
-  /v
   /vehiculos/capacidad/validaciones/{id_validacion}:
     get:
       tags:

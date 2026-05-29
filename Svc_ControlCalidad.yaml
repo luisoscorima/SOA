@@ -75,7 +75,6 @@ paths:
                 error: "PRODUCTOS_YA_VALIDADOS"
                 detalle: "Uno o más productos ya fueron validados previamente."
 
-  /c
   /calidad/validaciones/{id_validacion}:
     get:
       tags:

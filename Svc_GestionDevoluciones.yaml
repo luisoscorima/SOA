@@ -76,7 +76,6 @@ paths:
                 error: "DEVOLUCION_YA_REGISTRADA"
                 detalle: "El pedido enviado ya cuenta con una devolución registrada previamente."
 
-  /d
   /devoluciones/{id_devolucion}:
     get:
       tags:

@@ -77,7 +77,6 @@ paths:
                 error: "ALERTA_YA_REGISTRADA"
                 detalle: "El evento enviado ya cuenta con una alerta operativa registrada."
 
-  /a
   /alertas/operativas/{id_alerta}:
     get:
       tags:

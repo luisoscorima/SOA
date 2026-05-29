@@ -79,7 +79,6 @@ paths:
                 error: "GUIA_YA_GENERADA"
                 detalle: "El despacho enviado ya cuenta con una guía de remisión generada."
 
-  /g
   /guias/{id_guia}:
     get:
       tags:

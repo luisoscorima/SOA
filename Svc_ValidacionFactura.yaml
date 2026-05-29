@@ -74,7 +74,6 @@ paths:
                 error: "INCONSISTENCIA_FACTURA"
                 detalle: "Existen diferencias entre los productos entregados y los registrados en la factura."
 
-  /f
   /facturas/validaciones/{id_validacion}:
     get:
       tags:

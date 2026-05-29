@@ -75,7 +75,6 @@ paths:
                 error: "LPN_YA_EXISTENTE"
                 detalle: "El pallet ya tiene un código LPN asignado."
 
-  /l
   /lpn/{id_lpn}:
     get:
       tags:

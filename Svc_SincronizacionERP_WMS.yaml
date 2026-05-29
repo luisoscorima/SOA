@@ -77,7 +77,6 @@ paths:
                 error: "PEDIDO_DUPLICADO"
                 detalle: "El pedido ERP ya fue sincronizado previamente con el WMS."
 
-  /e
   /erp-wms/sincronizaciones/{id_sincronizacion}:
     get:
       tags:

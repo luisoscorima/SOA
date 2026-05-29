@@ -78,7 +78,6 @@ paths:
                 error: "EVENTO_YA_REGISTRADO"
                 detalle: "El evento enviado ya fue registrado previamente en auditoría."
 
-  /a
   /auditoria/transacciones/{id_auditoria}:
     get:
       tags:

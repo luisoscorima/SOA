@@ -76,7 +76,6 @@ paths:
                 error: "LIQUIDACION_YA_GENERADA"
                 detalle: "La ruta enviada ya cuenta con una liquidación generada previamente."
 
-  /l
   /liquidaciones/{id_liquidacion}:
     get:
       tags:

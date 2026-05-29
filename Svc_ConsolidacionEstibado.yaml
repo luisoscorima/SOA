@@ -75,7 +75,6 @@ paths:
                 error: "PRODUCTOS_YA_ESTIBADOS"
                 detalle: "Los productos enviados ya fueron asociados previamente a un pallet."
 
-  /c
   /consolidacion/estibados/{id_consolidacion}:
     get:
       tags:

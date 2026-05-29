@@ -74,7 +74,6 @@ paths:
                 error: "PRODUCTO_YA_ESCANEADO"
                 detalle: "Uno o más productos o códigos LPN ya fueron escaneados previamente."
 
-  /c
   /carga/escaneos/{id_registro_escaneo}:
     get:
       tags:

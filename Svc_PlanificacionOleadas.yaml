@@ -74,7 +74,6 @@ paths:
                 error: "PEDIDOS_YA_AGRUPADOS"
                 detalle: "Uno o más pedidos ya pertenecen a una oleada existente."
 
-  /o
   /oleadas/{id_oleada}:
     get:
       tags:

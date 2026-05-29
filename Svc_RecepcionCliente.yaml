@@ -77,7 +77,6 @@ paths:
                 error: "RECEPCION_YA_CONFIRMADA"
                 detalle: "El pedido enviado ya cuenta con una recepción confirmada previamente."
 
-  /r
   /recepciones/{id_recepcion}:
     get:
       tags:

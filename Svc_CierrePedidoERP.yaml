@@ -75,7 +75,6 @@ paths:
                 error: "PEDIDO_YA_CERRADO"
                 detalle: "El pedido enviado ya se encuentra cerrado en el ERP."
 
-  /p
   /pedidos/cierres/{id_cierre}:
     get:
       tags:

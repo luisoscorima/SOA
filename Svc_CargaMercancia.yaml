@@ -76,7 +76,6 @@ paths:
                 error: "PALLETS_YA_CARGADOS"
                 detalle: "Uno o más pallets ya fueron cargados previamente en un camión."
 
-  /m
   /mercancia/cargas/{id_carga}:
     get:
       tags:

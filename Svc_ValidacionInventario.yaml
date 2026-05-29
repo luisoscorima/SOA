@@ -128,7 +128,6 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
-  /i
   /inventario/validaciones/{id_validacion}:
     get:
       tags:

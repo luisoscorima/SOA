@@ -75,7 +75,6 @@ paths:
                 error: "RUTA_YA_OPTIMIZADA"
                 detalle: "El despacho enviado ya cuenta con una ruta optimizada."
 
-  /r
   /rutas/optimizaciones/{id_optimizacion}:
     get:
       tags:

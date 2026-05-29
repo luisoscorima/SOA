@@ -74,7 +74,6 @@ paths:
                 error: "RETORNABLES_YA_REGISTRADOS"
                 detalle: "Los envases retornables asociados a esta entrega ya fueron registrados previamente."
 
-  /r
   /retornables/{id_retornable}:
     get:
       tags:

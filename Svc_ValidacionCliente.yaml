@@ -25,10 +25,65 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
+
   /clientes/validar:
+    get:
+      tags:
+        - ERP
+      operationId: validarCliente
+      summary: Validar cliente (consulta rápida)
+      description: Consulta directa sin identificador de registro previo.
+      parameters:
+        - name: id_cliente
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 150
+        - name: documento
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "20123456789"
+        - name: tipo_cliente
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "empresa"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseExito'
+              example:
+                ok: true
+                cliente_validado: true
+                estado_cliente: "activo"
+                nombre_cliente: "Comercial ABC SAC"
+                mensaje: "Cliente validado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseError400'
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseError404'
+  /clientes/validaciones:
     post:
-      summary: Validar cliente
-      description: Verifica la existencia y validez de un cliente dentro del ERP.
+      tags:
+        - ERP
+      operationId: registrarValidacionCliente
+      summary: Ejecutar validación de cliente
+      description: Crea o ejecuta una nueva operación del módulo ValidacionCliente.
       requestBody:
         required: true
         content:
@@ -40,24 +95,131 @@ paths:
               documento: "20123456789"
               tipo_cliente: "empresa"
       responses:
-        '200':
-          description: Cliente validado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionClienteResponseExito'
+              example:
+                ok: true
+                cliente_validado: true
+                estado_cliente: "activo"
+                nombre_cliente: "Comercial ABC SAC"
+                mensaje: "Cliente validado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionClienteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador o documento del cliente es inválido."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /clientes/validaciones/{id_validacion}:
+    get:
+      tags:
+        - ERP
+      operationId: consultarValidacionCliente
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VCL-000150"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseConsultaExito'
+              example:
+                ok: true
+                id_validacion: "VCL-000150"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
         '404':
-          description: Cliente no encontrado
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionClienteResponseError404'
+              example:
+                ok: false
+                error: "CLIENTE_NO_ENCONTRADO"
+                detalle: "No existe un cliente registrado con los datos enviados."
+
+    put:
+      tags:
+        - ERP
+      operationId: actualizarValidacionCliente
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VCL-000150"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionClienteRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseActualizarExito'
+              example:
+                ok: true
+                id_validacion: "VCL-000150"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador o documento del cliente es inválido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionClienteResponseError404'
+              example:
+                ok: false
+                error: "CLIENTE_NO_ENCONTRADO"
+                detalle: "No existe un cliente registrado con los datos enviados."
 
 components:
   schemas:
@@ -81,6 +243,22 @@ components:
           description: "Clasificación comercial del cliente."
           example: "empresa"
 
+    ValidacionClienteRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     ValidacionClienteResponseExito:
       type: object
       properties:
@@ -101,6 +279,42 @@ components:
         mensaje:
           type: string
           example: "Cliente validado correctamente"
+
+    ValidacionClienteResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VCL-000150"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    ValidacionClienteResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VCL-000150"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
 
     ValidacionClienteResponseError400:
       type: object
@@ -131,3 +345,18 @@ components:
           type: string
           maxLength: 250
           example: "No existe un cliente registrado con los datos enviados."
+
+    ValidacionClienteResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

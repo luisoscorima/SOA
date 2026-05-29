@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /bahias/asignar:
+  /bahias/asignaciones:
     post:
-      summary: Asignar bahía a pedido
-      description: Recibe un pedido y asigna una bahía disponible para el proceso de carga o despacho.
+      tags:
+        - Logística
+      operationId: registrarAsignacionBahia
+      summary: Asignar bahía de carga
+      description: Crea o ejecuta una nueva operación del módulo AsignacionBahia.
       requestBody:
         required: true
         content:
@@ -41,24 +44,178 @@ paths:
               tipo_operacion: "despacho"
               prioridad: "alta"
       responses:
-        '200':
-          description: Bahía asignada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AsignacionBahiaResponseExito'
+              example:
+                ok: true
+                id_bahia: "BAHIA-04"
+                estado_bahia: "asignada"
+                mensaje: "Bahía asignada correctamente al pedido"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AsignacionBahiaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador del pedido o almacén no cumple con el formato requerido."
         '409':
-          description: No existen bahías disponibles
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AsignacionBahiaResponseError409'
+              example:
+                ok: false
+                error: "BAHIA_NO_DISPONIBLE"
+                detalle: "No existen bahías disponibles para la operación solicitada."
+
+  /bahias/asignaciones/{id_asignacion}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarAsignacionBahia
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_asignacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "ASG-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseConsultaExito'
+              example:
+                ok: true
+                id_asignacion: "ASG-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarAsignacionBahia
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_asignacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "ASG-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionBahiaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseActualizarExito'
+              example:
+                ok: true
+                id_asignacion: "ASG-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador del pedido o almacén no cumple con el formato requerido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - Logística
+      operationId: anularAsignacionBahia
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_asignacion
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "ASG-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseAnularExito'
+              example:
+                ok: true
+                id_asignacion: "ASG-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionBahiaResponseError409'
+              example:
+                ok: false
+                error: "BAHIA_NO_DISPONIBLE"
+                detalle: "No existen bahías disponibles para la operación solicitada."
 
 components:
   schemas:
@@ -90,6 +247,22 @@ components:
           description: "Nivel de prioridad del pedido para la asignación."
           example: "alta"
 
+    AsignacionBahiaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     AsignacionBahiaResponseExito:
       type: object
       properties:
@@ -108,6 +281,60 @@ components:
           type: string
           example: "Bahía asignada correctamente al pedido"
 
+    AsignacionBahiaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_asignacion:
+          type: string
+          maxLength: 50
+          example: "ASG-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    AsignacionBahiaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_asignacion:
+          type: string
+          maxLength: 50
+          example: "ASG-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    AsignacionBahiaResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_asignacion:
+          type: string
+          maxLength: 50
+          example: "ASG-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     AsignacionBahiaResponseError400:
       type: object
       properties:
@@ -122,6 +349,21 @@ components:
           type: string
           maxLength: 250
           example: "El identificador del pedido o almacén no cumple con el formato requerido."
+
+    AsignacionBahiaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     AsignacionBahiaResponseError409:
       type: object

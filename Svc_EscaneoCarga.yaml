@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /carga/escanear:
+  /carga/escaneos:
     post:
-      summary: Escanear carga
-      description: Registra el escaneo de productos o pallets durante el proceso de carga logística.
+      tags:
+        - Logística
+      operationId: registrarEscaneoCarga
+      summary: Registrar escaneo de carga
+      description: Crea o ejecuta una nueva operación del módulo EscaneoCarga.
       requestBody:
         required: true
         content:
@@ -38,29 +41,179 @@ paths:
             example:
               id_carga: "CARGA-000654"
               id_operario: "OP-001"
-              productos:
-                - id_producto: "SKU_IK_1.5L"
-                  codigo_lpn: "LPN-2026-000458"
-                  cantidad_escaneada: 120
       responses:
-        '200':
-          description: Escaneo de carga registrado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EscaneoCargaResponseExito'
+              example:
+                ok: true
+                id_registro_escaneo: "ESC-000321"
+                estado: "registrado"
+                mensaje: "Escaneo de carga registrado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EscaneoCargaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de productos escaneados es inválida o incompleta."
         '409':
-          description: Producto o LPN ya escaneado previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EscaneoCargaResponseError409'
+              example:
+                ok: false
+                error: "PRODUCTO_YA_ESCANEADO"
+                detalle: "Uno o más productos o códigos LPN ya fueron escaneados previamente."
+
+  /carga/escaneos/{id_registro_escaneo}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarEscaneoCarga
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_registro_escaneo
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "ESC-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseConsultaExito'
+              example:
+                ok: true
+                id_registro_escaneo: "ESC-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarEscaneoCarga
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_registro_escaneo
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "ESC-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscaneoCargaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseActualizarExito'
+              example:
+                ok: true
+                id_registro_escaneo: "ESC-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de productos escaneados es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - Logística
+      operationId: anularEscaneoCarga
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_registro_escaneo
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "ESC-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseAnularExito'
+              example:
+                ok: true
+                id_registro_escaneo: "ESC-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscaneoCargaResponseError409'
+              example:
+                ok: false
+                error: "PRODUCTO_YA_ESCANEADO"
+                detalle: "Uno o más productos o códigos LPN ya fueron escaneados previamente."
 
 components:
   schemas:
@@ -100,6 +253,22 @@ components:
                 minimum: 1
                 example: 120
 
+    EscaneoCargaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     EscaneoCargaResponseExito:
       type: object
       properties:
@@ -118,6 +287,60 @@ components:
           type: string
           example: "Escaneo de carga registrado correctamente"
 
+    EscaneoCargaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_registro_escaneo:
+          type: string
+          maxLength: 50
+          example: "ESC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    EscaneoCargaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_registro_escaneo:
+          type: string
+          maxLength: 50
+          example: "ESC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    EscaneoCargaResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_registro_escaneo:
+          type: string
+          maxLength: 50
+          example: "ESC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     EscaneoCargaResponseError400:
       type: object
       properties:
@@ -132,6 +355,21 @@ components:
           type: string
           maxLength: 250
           example: "La información de productos escaneados es inválida o incompleta."
+
+    EscaneoCargaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     EscaneoCargaResponseError409:
       type: object

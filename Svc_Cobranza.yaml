@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /cobranzas/procesar:
+  /cobranzas:
     post:
+      tags:
+        - Financiero
+      operationId: registrarCobranza
       summary: Procesar cobranza
-      description: Recibe la información de un pedido y registra el pago correspondiente en el sistema financiero.
+      description: Crea o ejecuta una nueva operación del módulo Cobranza.
       requestBody:
         required: true
         content:
@@ -42,24 +45,178 @@ paths:
               moneda: "PEN"
               metodo_pago: "transferencia"
       responses:
-        '200':
-          description: Cobranza procesada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CobranzaResponseExito'
+              example:
+                ok: true
+                id_pago: "PAGO-000321"
+                estado_pago: "confirmado"
+                mensaje: "Cobranza procesada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CobranzaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El monto, moneda o método de pago enviado es inválido."
         '409':
-          description: Pago ya registrado previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CobranzaResponseError409'
+              example:
+                ok: false
+                error: "PAGO_YA_REGISTRADO"
+                detalle: "El pedido enviado ya cuenta con un pago registrado previamente."
+
+  /cobranzas/{id_cobranza}:
+    get:
+      tags:
+        - Financiero
+      operationId: consultarCobranza
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_cobranza
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "COB-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseConsultaExito'
+              example:
+                ok: true
+                id_cobranza: "COB-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Financiero
+      operationId: actualizarCobranza
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_cobranza
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "COB-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CobranzaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseActualizarExito'
+              example:
+                ok: true
+                id_cobranza: "COB-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El monto, moneda o método de pago enviado es inválido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - Financiero
+      operationId: anularCobranza
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_cobranza
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "COB-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseAnularExito'
+              example:
+                ok: true
+                id_cobranza: "COB-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CobranzaResponseError409'
+              example:
+                ok: false
+                error: "PAGO_YA_REGISTRADO"
+                detalle: "El pedido enviado ya cuenta con un pago registrado previamente."
 
 components:
   schemas:
@@ -98,6 +255,22 @@ components:
           description: "Método de pago utilizado por el cliente."
           example: "transferencia"
 
+    CobranzaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     CobranzaResponseExito:
       type: object
       properties:
@@ -116,6 +289,60 @@ components:
           type: string
           example: "Cobranza procesada correctamente"
 
+    CobranzaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_cobranza:
+          type: string
+          maxLength: 50
+          example: "COB-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    CobranzaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_cobranza:
+          type: string
+          maxLength: 50
+          example: "COB-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    CobranzaResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_cobranza:
+          type: string
+          maxLength: 50
+          example: "COB-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     CobranzaResponseError400:
       type: object
       properties:
@@ -130,6 +357,21 @@ components:
           type: string
           maxLength: 250
           example: "El monto, moneda o método de pago enviado es inválido."
+
+    CobranzaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     CobranzaResponseError409:
       type: object

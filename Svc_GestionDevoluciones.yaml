@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /devoluciones/registrar:
+  /devoluciones:
     post:
+      tags:
+        - Logística
+      operationId: registrarGestionDevoluciones
       summary: Registrar devolución
-      description: Registra una devolución de productos asociada a una entrega o pedido.
+      description: Crea o ejecuta una nueva operación del módulo GestionDevoluciones.
       requestBody:
         required: true
         content:
@@ -40,29 +43,179 @@ paths:
               id_entrega: "ENT-000125"
               id_cliente: 150
               motivo_devolucion: "producto_dañado"
-              productos:
-                - id_producto: "SKU_IK_1.5L"
-                  cantidad_devuelta: 10
-                  estado_producto: "dañado"
       responses:
-        '200':
-          description: Devolución registrada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GestionDevolucionesResponseExito'
+              example:
+                ok: true
+                id_devolucion: "DEV-000321"
+                estado: "registrada"
+                mensaje: "Devolución registrada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GestionDevolucionesResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de devolución enviada es inválida o incompleta."
         '409':
-          description: Devolución ya registrada previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GestionDevolucionesResponseError409'
+              example:
+                ok: false
+                error: "DEVOLUCION_YA_REGISTRADA"
+                detalle: "El pedido enviado ya cuenta con una devolución registrada previamente."
+
+  /devoluciones/{id_devolucion}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarGestionDevoluciones
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_devolucion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "DEV-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseConsultaExito'
+              example:
+                ok: true
+                id_devolucion: "DEV-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarGestionDevoluciones
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_devolucion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "DEV-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GestionDevolucionesRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseActualizarExito'
+              example:
+                ok: true
+                id_devolucion: "DEV-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de devolución enviada es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - Logística
+      operationId: anularGestionDevoluciones
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_devolucion
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "DEV-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseAnularExito'
+              example:
+                ok: true
+                id_devolucion: "DEV-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionDevolucionesResponseError409'
+              example:
+                ok: false
+                error: "DEVOLUCION_YA_REGISTRADA"
+                detalle: "El pedido enviado ya cuenta con una devolución registrada previamente."
 
 components:
   schemas:
@@ -111,6 +264,22 @@ components:
                 maxLength: 50
                 example: "dañado"
 
+    GestionDevolucionesRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     GestionDevolucionesResponseExito:
       type: object
       properties:
@@ -129,6 +298,60 @@ components:
           type: string
           example: "Devolución registrada correctamente"
 
+    GestionDevolucionesResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_devolucion:
+          type: string
+          maxLength: 50
+          example: "DEV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    GestionDevolucionesResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_devolucion:
+          type: string
+          maxLength: 50
+          example: "DEV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    GestionDevolucionesResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_devolucion:
+          type: string
+          maxLength: 50
+          example: "DEV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     GestionDevolucionesResponseError400:
       type: object
       properties:
@@ -143,6 +366,21 @@ components:
           type: string
           maxLength: 250
           example: "La información de devolución enviada es inválida o incompleta."
+
+    GestionDevolucionesResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     GestionDevolucionesResponseError409:
       type: object

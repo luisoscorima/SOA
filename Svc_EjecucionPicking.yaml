@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /picking/ejecutar:
+  /picking/ejecuciones:
     post:
+      tags:
+        - WMS
+      operationId: registrarEjecucionPicking
       summary: Ejecutar picking
-      description: Registra la ejecución de una lista de picking y confirma los productos recolectados en almacén.
+      description: Crea o ejecuta una nueva operación del módulo EjecucionPicking.
       requestBody:
         required: true
         content:
@@ -38,29 +41,179 @@ paths:
             example:
               id_lista_picking: "PICK-000789"
               id_operario: "OP-001"
-              productos:
-                - id_producto: "SKU_IK_1.5L"
-                  cantidad_recolectada: 120
-                  ubicacion: "PASILLO-03-NIVEL-02"
       responses:
-        '200':
-          description: Picking ejecutado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EjecucionPickingResponseExito'
+              example:
+                ok: true
+                id_ejecucion_picking: "EJPICK-000456"
+                estado: "completado"
+                mensaje: "Picking ejecutado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EjecucionPickingResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La lista de productos recolectados no puede estar vacía."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /picking/ejecuciones/{id_ejecucion}:
+    get:
+      tags:
+        - WMS
+      operationId: consultarEjecucionPicking
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_ejecucion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "EJE-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseConsultaExito'
+              example:
+                ok: true
+                id_ejecucion: "EJE-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
         '404':
-          description: Lista de picking no encontrada
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EjecucionPickingResponseError404'
+              example:
+                ok: false
+                error: "LISTA_PICKING_NO_ENCONTRADA"
+                detalle: "No existe una lista de picking registrada con el identificador enviado."
+
+    put:
+      tags:
+        - WMS
+      operationId: actualizarEjecucionPicking
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_ejecucion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "EJE-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EjecucionPickingRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseActualizarExito'
+              example:
+                ok: true
+                id_ejecucion: "EJE-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La lista de productos recolectados no puede estar vacía."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseError404'
+              example:
+                ok: false
+                error: "LISTA_PICKING_NO_ENCONTRADA"
+                detalle: "No existe una lista de picking registrada con el identificador enviado."
+
+    delete:
+      tags:
+        - WMS
+      operationId: anularEjecucionPicking
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_ejecucion
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "EJE-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseAnularExito'
+              example:
+                ok: true
+                id_ejecucion: "EJE-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseError404'
+              example:
+                ok: false
+                error: "LISTA_PICKING_NO_ENCONTRADA"
+                detalle: "No existe una lista de picking registrada con el identificador enviado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionPickingResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
 
 components:
   schemas:
@@ -100,6 +253,22 @@ components:
                 maxLength: 50
                 example: "PASILLO-03-NIVEL-02"
 
+    EjecucionPickingRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     EjecucionPickingResponseExito:
       type: object
       properties:
@@ -117,6 +286,60 @@ components:
         mensaje:
           type: string
           example: "Picking ejecutado correctamente"
+
+    EjecucionPickingResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_ejecucion:
+          type: string
+          maxLength: 50
+          example: "EJE-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    EjecucionPickingResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_ejecucion:
+          type: string
+          maxLength: 50
+          example: "EJE-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    EjecucionPickingResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_ejecucion:
+          type: string
+          maxLength: 50
+          example: "EJE-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
 
     EjecucionPickingResponseError400:
       type: object
@@ -147,3 +370,18 @@ components:
           type: string
           maxLength: 250
           example: "No existe una lista de picking registrada con el identificador enviado."
+
+    EjecucionPickingResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

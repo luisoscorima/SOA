@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /facturas/validar:
+  /facturas/validaciones:
     post:
-      summary: Validar productos contra factura
-      description: Compara los productos entregados con los productos registrados en la factura asociada.
+      tags:
+        - Repartidor
+      operationId: registrarValidacionFactura
+      summary: Ejecutar validación de factura
+      description: Crea o ejecuta una nueva operación del módulo ValidacionFactura.
       requestBody:
         required: true
         content:
@@ -38,28 +41,131 @@ paths:
             example:
               id_factura: "FAC-000125"
               id_entrega: "ENT-000125"
-              productos:
-                - id_producto: "SKU_IK_1.5L"
-                  cantidad_entregada: 120
       responses:
-        '200':
-          description: Validación realizada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionFacturaResponseExito'
+              example:
+                ok: true
+                validacion_correcta: true
+                estado: "validado"
+                mensaje: "Los productos entregados coinciden con la factura"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionFacturaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de productos entregados es inválida o incompleta."
         '409':
-          description: Inconsistencia detectada entre factura y entrega
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionFacturaResponseError409'
+              example:
+                ok: false
+                error: "INCONSISTENCIA_FACTURA"
+                detalle: "Existen diferencias entre los productos entregados y los registrados en la factura."
+
+  /facturas/validaciones/{id_validacion}:
+    get:
+      tags:
+        - Repartidor
+      operationId: consultarValidacionFactura
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VFAC-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseConsultaExito'
+              example:
+                ok: true
+                id_validacion: "VFAC-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Repartidor
+      operationId: actualizarValidacionFactura
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VFAC-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionFacturaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseActualizarExito'
+              example:
+                ok: true
+                id_validacion: "VFAC-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de productos entregados es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionFacturaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
@@ -95,6 +201,22 @@ components:
                 minimum: 1
                 example: 120
 
+    ValidacionFacturaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     ValidacionFacturaResponseExito:
       type: object
       properties:
@@ -112,6 +234,42 @@ components:
           type: string
           example: "Los productos entregados coinciden con la factura"
 
+    ValidacionFacturaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VFAC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    ValidacionFacturaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VFAC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
     ValidacionFacturaResponseError400:
       type: object
       properties:
@@ -126,6 +284,21 @@ components:
           type: string
           maxLength: 250
           example: "La información de productos entregados es inválida o incompleta."
+
+    ValidacionFacturaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     ValidacionFacturaResponseError409:
       type: object

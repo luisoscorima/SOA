@@ -25,10 +25,69 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /geocercas/monitorear:
+  /geocercas:
+    get:
+      tags:
+        - TMS
+      operationId: consultarGeocercaDirecto
+      summary: Consultar geocerca (consulta rápida)
+      description: Consulta directa del estado de una geocerca y su relación con un vehículo.
+      parameters:
+        - name: id_geocerca
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 50
+            example: "GEO-000125"
+        - name: id_vehiculo
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 50
+            example: "VEH-000321"
+      responses:
+        '200':
+          description: Geocerca consultada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseExito'
+              example:
+                ok: true
+                id_geocerca: "GEO-000125"
+                alerta_generada: true
+                tipo_alerta: "ingreso"
+                mensaje: "Geocerca consultada correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseError400'
+              example:
+                ok: false
+                error: "COORDENADAS_INVALIDAS"
+                detalle: "La latitud o longitud enviada se encuentra fuera del rango permitido."
+        '404':
+          description: Geocerca no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseError404'
+              example:
+                ok: false
+                error: "GEOCERCA_NO_ENCONTRADA"
+                detalle: "No existe una geocerca registrada con el identificador enviado."
+
+  /geocercas/consultas:
     post:
-      summary: Monitorear geocerca
-      description: Evalúa la ubicación de un vehículo respecto a una geocerca configurada y genera alertas de ingreso o salida.
+      tags:
+        - TMS
+      operationId: registrarGeocercas
+      summary: Registrar consulta de geocerca
+      description: Crea o ejecuta una nueva operación del módulo Geocercas.
       requestBody:
         required: true
         content:
@@ -41,24 +100,131 @@ paths:
               longitud: -77.0428
               id_geocerca: "GEO-000125"
       responses:
-        '200':
-          description: Monitoreo de geocerca procesado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeocercasResponseExito'
+              example:
+                ok: true
+                id_geocerca: "GEO-000125"
+                alerta_generada: true
+                tipo_alerta: "ingreso"
+                mensaje: "Geocerca consultada correctamente"
         '400':
-          description: Datos de ubicación inválidos
+          description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeocercasResponseError400'
+              example:
+                ok: false
+                error: "COORDENADAS_INVALIDAS"
+                detalle: "La latitud o longitud enviada se encuentra fuera del rango permitido."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /geocercas/consultas/{id_consulta}:
+    get:
+      tags:
+        - TMS
+      operationId: consultarGeocercas
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_consulta
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "GEOCON-000125"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseConsultaExito'
+              example:
+                ok: true
+                id_consulta: "GEOCON-000125"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
         '404':
-          description: Geocerca no encontrada
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeocercasResponseError404'
+              example:
+                ok: false
+                error: "GEOCERCA_NO_ENCONTRADA"
+                detalle: "No existe una geocerca registrada con el identificador enviado."
+
+    put:
+      tags:
+        - TMS
+      operationId: actualizarGeocercas
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_consulta
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "GEOCON-000125"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeocercasRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseActualizarExito'
+              example:
+                ok: true
+                id_consulta: "GEOCON-000125"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseError400'
+              example:
+                ok: false
+                error: "COORDENADAS_INVALIDAS"
+                detalle: "La latitud o longitud enviada se encuentra fuera del rango permitido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocercasResponseError404'
+              example:
+                ok: false
+                error: "GEOCERCA_NO_ENCONTRADA"
+                detalle: "No existe una geocerca registrada con el identificador enviado."
 
 components:
   schemas:
@@ -95,12 +261,32 @@ components:
           description: "Código de la geocerca configurada."
           example: "GEO-000125"
 
+    GeocercasRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     GeocercasResponseExito:
       type: object
       properties:
         ok:
           type: boolean
           example: true
+        id_geocerca:
+          type: string
+          maxLength: 50
+          example: "GEO-000125"
         alerta_generada:
           type: boolean
           example: true
@@ -110,7 +296,43 @@ components:
           example: "ingreso"
         mensaje:
           type: string
-          example: "Vehículo ingresó a la geocerca configurada"
+          example: "Geocerca consultada correctamente"
+
+    GeocercasResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_consulta:
+          type: string
+          maxLength: 50
+          example: "GEOCON-000125"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    GeocercasResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_consulta:
+          type: string
+          maxLength: 50
+          example: "GEOCON-000125"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
 
     GeocercasResponseError400:
       type: object
@@ -141,3 +363,18 @@ components:
           type: string
           maxLength: 250
           example: "No existe una geocerca registrada con el identificador enviado."
+
+    GeocercasResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /vehiculos/capacidad/validar:
+  /vehiculos/capacidad/validaciones:
     post:
-      summary: Validar capacidad vehicular
-      description: Valida si el peso y volumen de la carga pueden ser transportados por el vehículo asignado.
+      tags:
+        - TMS
+      operationId: registrarValidacionCapacidadVehicular
+      summary: Ejecutar validación de capacidad vehicular
+      description: Crea o ejecuta una nueva operación del módulo ValidacionCapacidadVehicular.
       requestBody:
         required: true
         content:
@@ -41,24 +44,130 @@ paths:
               volumen_total_m3: 18.5
               id_despacho: "DESP-000125"
       responses:
-        '200':
-          description: Capacidad vehicular validada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseExito'
+              example:
+                ok: true
+                capacidad_valida: true
+                estado: "aprobado"
+                mensaje: "La carga cumple con la capacidad permitida del vehículo"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El peso o volumen enviado no cumple con el formato requerido."
         '409':
-          description: La carga excede la capacidad del vehículo
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseError409'
+              example:
+                ok: false
+                error: "CAPACIDAD_EXCEDIDA"
+                detalle: "La carga excede el peso o volumen máximo permitido para el vehículo asignado."
+
+  /vehiculos/capacidad/validaciones/{id_validacion}:
+    get:
+      tags:
+        - TMS
+      operationId: consultarValidacionCapacidadVehicular
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VCV-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseConsultaExito'
+              example:
+                ok: true
+                id_validacion: "VCV-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - TMS
+      operationId: actualizarValidacionCapacidadVehicular
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VCV-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionCapacidadVehicularRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseActualizarExito'
+              example:
+                ok: true
+                id_validacion: "VCV-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El peso o volumen enviado no cumple con el formato requerido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionCapacidadVehicularResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
@@ -92,6 +201,22 @@ components:
           description: "Código del despacho asociado a la validación de capacidad."
           example: "DESP-000125"
 
+    ValidacionCapacidadVehicularRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     ValidacionCapacidadVehicularResponseExito:
       type: object
       properties:
@@ -109,6 +234,42 @@ components:
           type: string
           example: "La carga cumple con la capacidad permitida del vehículo"
 
+    ValidacionCapacidadVehicularResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VCV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    ValidacionCapacidadVehicularResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VCV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
     ValidacionCapacidadVehicularResponseError400:
       type: object
       properties:
@@ -123,6 +284,21 @@ components:
           type: string
           maxLength: 250
           example: "El peso o volumen enviado no cumple con el formato requerido."
+
+    ValidacionCapacidadVehicularResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     ValidacionCapacidadVehicularResponseError409:
       type: object

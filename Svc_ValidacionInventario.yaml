@@ -25,60 +25,205 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
+
   /inventario/validar:
     get:
-      summary: Validar inventario disponible
-      description: Consulta el stock disponible de un producto y confirma si puede atender la cantidad solicitada.
+      tags:
+        - WMS
+      operationId: validarInventario
+      summary: Validar inventario (consulta rápida)
+      description: Consulta directa sin identificador de registro previo.
       parameters:
         - name: id_producto
           in: query
           required: true
-          description: Código único del producto a validar.
           schema:
             type: string
-            minLength: 3
-            maxLength: 50
             example: "SKU_IK_1.5L"
         - name: cantidad
           in: query
           required: true
-          description: Cantidad solicitada para validar disponibilidad.
           schema:
             type: integer
-            minimum: 1
-            maximum: 10000
             example: 120
         - name: id_almacen
           in: query
           required: false
-          description: Código del almacén donde se validará el inventario.
           schema:
             type: string
-            maxLength: 20
             example: "ALM_LIMA"
       responses:
         '200':
-          description: Inventario validado correctamente
+          description: Consulta realizada correctamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InventarioResponseExito'
+                $ref: '#/components/schemas/ValidacionInventarioResponseExito'
+              example:
+                ok: true
+                disponible: true
+                stock_actual: 350
+                confirmacion: "Stock disponible para atender la solicitud"
+                id_producto: "SKU_IK_1.5L"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InventarioResponseError400'
+                $ref: '#/components/schemas/ValidacionInventarioResponseError400'
         '404':
-          description: Producto no encontrado en inventario
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InventarioResponseError404'
+                $ref: '#/components/schemas/ValidacionInventarioResponseError404'
+  /inventario/validaciones:
+    post:
+      tags:
+        - WMS
+      operationId: registrarValidacionInventario
+      summary: Ejecutar validación de inventario
+      description: Crea o ejecuta una nueva operación del módulo ValidacionInventario.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionInventarioRequest'
+            example:
+              id_producto: "SKU_IK_1.5L"
+              cantidad: 120
+              id_almacen: "ALM_LIMA"
+      responses:
+        '201':
+          description: Operación registrada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseExito'
+              example:
+                ok: true
+                disponible: true
+                stock_actual: 350
+                confirmacion: "Stock disponible para atender la solicitud"
+                id_producto: "SKU_IK_1.5L"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La cantidad solicitada debe ser mayor a cero."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /inventario/validaciones/{id_validacion}:
+    get:
+      tags:
+        - WMS
+      operationId: consultarValidacionInventario
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VINV-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseConsultaExito'
+              example:
+                ok: true
+                id_validacion: "VINV-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseError404'
+              example:
+                ok: false
+                error: "PRODUCTO_NO_ENCONTRADO"
+                detalle: "No se encontró stock registrado para el producto solicitado."
+
+    put:
+      tags:
+        - WMS
+      operationId: actualizarValidacionInventario
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VINV-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionInventarioRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseActualizarExito'
+              example:
+                ok: true
+                id_validacion: "VINV-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La cantidad solicitada debe ser mayor a cero."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionInventarioResponseError404'
+              example:
+                ok: false
+                error: "PRODUCTO_NO_ENCONTRADO"
+                detalle: "No se encontró stock registrado para el producto solicitado."
 
 components:
   schemas:
-    InventarioRequest:
+    ValidacionInventarioRequest:
       type: object
       required:
         - id_producto
@@ -102,7 +247,23 @@ components:
           description: "Código del almacén donde se realizará la validación. Opcional."
           example: "ALM_LIMA"
 
-    InventarioResponseExito:
+    ValidacionInventarioRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
+    ValidacionInventarioResponseExito:
       type: object
       properties:
         ok:
@@ -124,7 +285,43 @@ components:
           maxLength: 50
           example: "SKU_IK_1.5L"
 
-    InventarioResponseError400:
+    ValidacionInventarioResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VINV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    ValidacionInventarioResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VINV-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    ValidacionInventarioResponseError400:
       type: object
       properties:
         ok:
@@ -139,7 +336,7 @@ components:
           maxLength: 250
           example: "La cantidad solicitada debe ser mayor a cero."
 
-    InventarioResponseError404:
+    ValidacionInventarioResponseError404:
       type: object
       properties:
         ok:
@@ -153,3 +350,18 @@ components:
           type: string
           maxLength: 250
           example: "No se encontró stock registrado para el producto solicitado."
+
+    ValidacionInventarioResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

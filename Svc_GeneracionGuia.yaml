@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /guias/generar:
+  /guias:
     post:
+      tags:
+        - SUNAT
+      operationId: registrarGeneracionGuia
       summary: Generar guía de remisión
-      description: Recibe los datos del despacho y genera una guía de remisión electrónica para SUNAT.
+      description: Crea o ejecuta una nueva operación del módulo GeneracionGuia.
       requestBody:
         required: true
         content:
@@ -42,29 +45,180 @@ paths:
               punto_partida: "ALM_LIMA"
               punto_llegada: "CLIENTE_LIMA"
               placa_vehiculo: "ABC-123"
-              productos:
-                - id_producto: "SKU_IK_1.5L"
-                  descripcion: "Producto terminado 1.5L"
-                  cantidad: 120
       responses:
-        '200':
-          description: Guía generada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneracionGuiaResponseExito'
+              example:
+                ok: true
+                id_guia: "GRE-000789"
+                numero_guia: "T001-00001234"
+                estado_sunat: "generada"
+                mensaje: "Guía de remisión generada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneracionGuiaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "Los datos tributarios o logísticos enviados son inválidos o incompletos."
         '409':
-          description: La guía ya fue generada previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneracionGuiaResponseError409'
+              example:
+                ok: false
+                error: "GUIA_YA_GENERADA"
+                detalle: "El despacho enviado ya cuenta con una guía de remisión generada."
+
+  /guias/{id_guia}:
+    get:
+      tags:
+        - SUNAT
+      operationId: consultarGeneracionGuia
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_guia
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "GUIA-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseConsultaExito'
+              example:
+                ok: true
+                id_guia: "GUIA-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - SUNAT
+      operationId: actualizarGeneracionGuia
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_guia
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "GUIA-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneracionGuiaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseActualizarExito'
+              example:
+                ok: true
+                id_guia: "GUIA-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "Los datos tributarios o logísticos enviados son inválidos o incompletos."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - SUNAT
+      operationId: anularGeneracionGuia
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_guia
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "GUIA-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseAnularExito'
+              example:
+                ok: true
+                id_guia: "GUIA-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionGuiaResponseError409'
+              example:
+                ok: false
+                error: "GUIA_YA_GENERADA"
+                detalle: "El despacho enviado ya cuenta con una guía de remisión generada."
 
 components:
   schemas:
@@ -129,6 +283,22 @@ components:
                 minimum: 1
                 example: 120
 
+    GeneracionGuiaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     GeneracionGuiaResponseExito:
       type: object
       properties:
@@ -151,6 +321,60 @@ components:
           type: string
           example: "Guía de remisión generada correctamente"
 
+    GeneracionGuiaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_guia:
+          type: string
+          maxLength: 50
+          example: "GUIA-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    GeneracionGuiaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_guia:
+          type: string
+          maxLength: 50
+          example: "GUIA-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    GeneracionGuiaResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_guia:
+          type: string
+          maxLength: 50
+          example: "GUIA-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     GeneracionGuiaResponseError400:
       type: object
       properties:
@@ -165,6 +389,21 @@ components:
           type: string
           maxLength: 250
           example: "Los datos tributarios o logísticos enviados son inválidos o incompletos."
+
+    GeneracionGuiaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     GeneracionGuiaResponseError409:
       type: object

@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /temperatura/monitorear:
+  /temperatura/monitoreos:
     post:
-      summary: Monitorear temperatura de carga
-      description: Registra y evalúa la temperatura capturada por sensores durante el transporte de mercancía.
+      tags:
+        - TMS
+      operationId: registrarMonitoreoTemperaturaCarga
+      summary: Registrar monitoreo de temperatura
+      description: Crea o ejecuta una nueva operación del módulo MonitoreoTemperaturaCarga.
       requestBody:
         required: true
         content:
@@ -42,24 +45,130 @@ paths:
               unidad_medida: "C"
               id_ruta: "RUTA-000789"
       responses:
-        '200':
-          description: Temperatura monitoreada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseExito'
+              example:
+                ok: true
+                alerta_generada: false
+                estado: "temperatura_normal"
+                mensaje: "Temperatura monitoreada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La temperatura o información del sensor es inválida."
         '409':
-          description: Temperatura fuera del rango permitido
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseError409'
+              example:
+                ok: false
+                error: "TEMPERATURA_FUERA_DE_RANGO"
+                detalle: "La temperatura registrada excede los límites permitidos para la carga."
+
+  /temperatura/monitoreos/{id_monitoreo}:
+    get:
+      tags:
+        - TMS
+      operationId: consultarMonitoreoTemperaturaCarga
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_monitoreo
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "TEMP-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseConsultaExito'
+              example:
+                ok: true
+                id_monitoreo: "TEMP-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - TMS
+      operationId: actualizarMonitoreoTemperaturaCarga
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_monitoreo
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "TEMP-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonitoreoTemperaturaCargaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseActualizarExito'
+              example:
+                ok: true
+                id_monitoreo: "TEMP-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La temperatura o información del sensor es inválida."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoreoTemperaturaCargaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
@@ -95,6 +204,22 @@ components:
           description: "Código de la ruta asociada al monitoreo."
           example: "RUTA-000789"
 
+    MonitoreoTemperaturaCargaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     MonitoreoTemperaturaCargaResponseExito:
       type: object
       properties:
@@ -112,6 +237,42 @@ components:
           type: string
           example: "Temperatura monitoreada correctamente"
 
+    MonitoreoTemperaturaCargaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_monitoreo:
+          type: string
+          maxLength: 50
+          example: "TEMP-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    MonitoreoTemperaturaCargaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_monitoreo:
+          type: string
+          maxLength: 50
+          example: "TEMP-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
     MonitoreoTemperaturaCargaResponseError400:
       type: object
       properties:
@@ -126,6 +287,21 @@ components:
           type: string
           maxLength: 250
           example: "La temperatura o información del sensor es inválida."
+
+    MonitoreoTemperaturaCargaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     MonitoreoTemperaturaCargaResponseError409:
       type: object

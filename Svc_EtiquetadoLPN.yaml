@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /lpn/generar:
+  /lpn:
     post:
+      tags:
+        - WMS
+      operationId: registrarEtiquetadoLPN
       summary: Generar etiqueta LPN
-      description: Genera y asigna un código LPN único a un pallet registrado en el sistema.
+      description: Crea o ejecuta una nueva operación del módulo EtiquetadoLPN.
       requestBody:
         required: true
         content:
@@ -40,24 +43,178 @@ paths:
               tipo_pallet: "despacho"
               id_almacen: "ALM_LIMA"
       responses:
-        '200':
-          description: Código LPN generado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EtiquetadoLPNResponseExito'
+              example:
+                ok: true
+                codigo_lpn: "LPN-2026-000458"
+                id_pallet: "PALLET-000987"
+                mensaje: "Código LPN generado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EtiquetadoLPNResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador del pallet no cumple con el formato requerido."
         '409':
-          description: El pallet ya cuenta con un código LPN asignado
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EtiquetadoLPNResponseError409'
+              example:
+                ok: false
+                error: "LPN_YA_EXISTENTE"
+                detalle: "El pallet ya tiene un código LPN asignado."
+
+  /lpn/{id_lpn}:
+    get:
+      tags:
+        - WMS
+      operationId: consultarEtiquetadoLPN
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_lpn
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "LPN-2026-000458"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseConsultaExito'
+              example:
+                ok: true
+                id_lpn: "LPN-2026-000458"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - WMS
+      operationId: actualizarEtiquetadoLPN
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_lpn
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "LPN-2026-000458"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtiquetadoLPNRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseActualizarExito'
+              example:
+                ok: true
+                id_lpn: "LPN-2026-000458"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador del pallet no cumple con el formato requerido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - WMS
+      operationId: anularEtiquetadoLPN
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_lpn
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "LPN-2026-000458"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseAnularExito'
+              example:
+                ok: true
+                id_lpn: "LPN-2026-000458"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtiquetadoLPNResponseError409'
+              example:
+                ok: false
+                error: "LPN_YA_EXISTENTE"
+                detalle: "El pallet ya tiene un código LPN asignado."
 
 components:
   schemas:
@@ -83,6 +240,22 @@ components:
           description: "Código del almacén donde se encuentra el pallet."
           example: "ALM_LIMA"
 
+    EtiquetadoLPNRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     EtiquetadoLPNResponseExito:
       type: object
       properties:
@@ -101,6 +274,60 @@ components:
           type: string
           example: "Código LPN generado correctamente"
 
+    EtiquetadoLPNResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_lpn:
+          type: string
+          maxLength: 50
+          example: "LPN-2026-000458"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    EtiquetadoLPNResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_lpn:
+          type: string
+          maxLength: 50
+          example: "LPN-2026-000458"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    EtiquetadoLPNResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_lpn:
+          type: string
+          maxLength: 50
+          example: "LPN-2026-000458"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     EtiquetadoLPNResponseError400:
       type: object
       properties:
@@ -115,6 +342,21 @@ components:
           type: string
           maxLength: 250
           example: "El identificador del pallet no cumple con el formato requerido."
+
+    EtiquetadoLPNResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     EtiquetadoLPNResponseError409:
       type: object

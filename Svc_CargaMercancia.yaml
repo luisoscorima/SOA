@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /mercancia/cargar:
+  /mercancia/cargas:
     post:
-      summary: Cargar mercancía en camión
-      description: Registra la carga de pallets en el camión asignado para el despacho.
+      tags:
+        - Logística
+      operationId: registrarCargaMercancia
+      summary: Registrar carga de mercancía
+      description: Crea o ejecuta una nueva operación del módulo CargaMercancia.
       requestBody:
         required: true
         content:
@@ -39,28 +42,180 @@ paths:
               id_camion: "CAM-000321"
               placa_vehiculo: "ABC-123"
               id_transportista: "TR-000125"
-              pallets:
-                - id_pallet: "PALLET-000987"
-                  codigo_lpn: "LPN-2026-000458"
       responses:
-        '200':
-          description: Camión cargado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CargaMercanciaResponseExito'
+              example:
+                ok: true
+                id_carga: "CARGA-000654"
+                estado_camion: "cargado"
+                cantidad_pallets: 1
+                mensaje: "Camión cargado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CargaMercanciaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La lista de pallets no puede estar vacía."
         '409':
-          description: Pallets ya cargados previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CargaMercanciaResponseError409'
+              example:
+                ok: false
+                error: "PALLETS_YA_CARGADOS"
+                detalle: "Uno o más pallets ya fueron cargados previamente en un camión."
+
+  /mercancia/cargas/{id_carga}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarCargaMercancia
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_carga
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "CARGA-000654"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseConsultaExito'
+              example:
+                ok: true
+                id_carga: "CARGA-000654"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarCargaMercancia
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_carga
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "CARGA-000654"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CargaMercanciaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseActualizarExito'
+              example:
+                ok: true
+                id_carga: "CARGA-000654"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La lista de pallets no puede estar vacía."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - Logística
+      operationId: anularCargaMercancia
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_carga
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "CARGA-000654"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseAnularExito'
+              example:
+                ok: true
+                id_carga: "CARGA-000654"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CargaMercanciaResponseError409'
+              example:
+                ok: false
+                error: "PALLETS_YA_CARGADOS"
+                detalle: "Uno o más pallets ya fueron cargados previamente en un camión."
 
 components:
   schemas:
@@ -101,6 +256,22 @@ components:
                 maxLength: 50
                 example: "LPN-2026-000458"
 
+    CargaMercanciaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     CargaMercanciaResponseExito:
       type: object
       properties:
@@ -122,6 +293,60 @@ components:
           type: string
           example: "Camión cargado correctamente"
 
+    CargaMercanciaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_carga:
+          type: string
+          maxLength: 50
+          example: "CARGA-000654"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    CargaMercanciaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_carga:
+          type: string
+          maxLength: 50
+          example: "CARGA-000654"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    CargaMercanciaResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_carga:
+          type: string
+          maxLength: 50
+          example: "CARGA-000654"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     CargaMercanciaResponseError400:
       type: object
       properties:
@@ -136,6 +361,21 @@ components:
           type: string
           maxLength: 250
           example: "La lista de pallets no puede estar vacía."
+
+    CargaMercanciaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     CargaMercanciaResponseError409:
       type: object

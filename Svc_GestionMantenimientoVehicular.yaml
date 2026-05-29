@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /mantenimiento/vehicular/estado:
+  /vehiculos/mantenimientos:
     post:
-      summary: Registrar estado de mantenimiento vehicular
-      description: Registra o actualiza el estado de mantenimiento de un vehículo de la flota.
+      tags:
+        - Flota
+      operationId: registrarGestionMantenimientoVehicular
+      summary: Registrar mantenimiento vehicular
+      description: Crea o ejecuta una nueva operación del módulo GestionMantenimientoVehicular.
       requestBody:
         required: true
         content:
@@ -36,45 +39,145 @@ paths:
             schema:
               $ref: '#/components/schemas/GestionMantenimientoVehicularRequest'
             example:
-              id_vehiculo: "VEH-000321"
               placa_vehiculo: "ABC-123"
               estado_mantenimiento: "operativo"
               fecha_revision: "2026-05-29"
               observacion: "Vehículo disponible para ruta."
       responses:
-        '200':
-          description: Estado de mantenimiento actualizado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GestionMantenimientoVehicularResponseExito'
+              example:
+                ok: true
+                id_registro_mantenimiento: "MANT-000321"
+                id_vehiculo: "VEH-000321"
+                estado_mantenimiento: "operativo"
+                mensaje: "Estado de mantenimiento vehicular actualizado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GestionMantenimientoVehicularResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de mantenimiento enviada es inválida o incompleta."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /vehiculos/mantenimientos/{id_mantenimiento}:
+    get:
+      tags:
+        - Flota
+      operationId: consultarGestionMantenimientoVehicular
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_mantenimiento
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "MANT-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseConsultaExito'
+              example:
+                ok: true
+                id_mantenimiento: "MANT-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
         '404':
-          description: Vehículo no encontrado
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GestionMantenimientoVehicularResponseError404'
+              example:
+                ok: false
+                error: "VEHICULO_NO_ENCONTRADO"
+                detalle: "No existe un vehículo registrado con el identificador enviado."
+
+    put:
+      tags:
+        - Flota
+      operationId: actualizarGestionMantenimientoVehicular
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_mantenimiento
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "MANT-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GestionMantenimientoVehicularRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseActualizarExito'
+              example:
+                ok: true
+                id_mantenimiento: "MANT-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de mantenimiento enviada es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GestionMantenimientoVehicularResponseError404'
+              example:
+                ok: false
+                error: "VEHICULO_NO_ENCONTRADO"
+                detalle: "No existe un vehículo registrado con el identificador enviado."
 
 components:
   schemas:
     GestionMantenimientoVehicularRequest:
       type: object
       required:
-        - id_vehiculo
         - estado_mantenimiento
         - fecha_revision
       properties:
-        id_vehiculo:
-          type: string
-          maxLength: 50
-          description: "Código único del vehículo registrado en la flota."
-          example: "VEH-000321"
         placa_vehiculo:
           type: string
           maxLength: 10
@@ -96,6 +199,22 @@ components:
           description: "Comentario adicional sobre el estado del vehículo."
           example: "Vehículo disponible para ruta."
 
+    GestionMantenimientoVehicularRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     GestionMantenimientoVehicularResponseExito:
       type: object
       properties:
@@ -106,6 +225,10 @@ components:
           type: string
           maxLength: 50
           example: "MANT-000321"
+        id_vehiculo:
+          type: string
+          maxLength: 50
+          example: "VEH-000321"
         estado_mantenimiento:
           type: string
           maxLength: 30
@@ -113,6 +236,42 @@ components:
         mensaje:
           type: string
           example: "Estado de mantenimiento vehicular actualizado correctamente"
+
+    GestionMantenimientoVehicularResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_mantenimiento:
+          type: string
+          maxLength: 50
+          example: "MANT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    GestionMantenimientoVehicularResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_mantenimiento:
+          type: string
+          maxLength: 50
+          example: "MANT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
 
     GestionMantenimientoVehicularResponseError400:
       type: object
@@ -143,3 +302,18 @@ components:
           type: string
           maxLength: 250
           example: "No existe un vehículo registrado con el identificador enviado."
+
+    GestionMantenimientoVehicularResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

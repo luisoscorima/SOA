@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /carga/corregir:
+  /carga/correcciones:
     post:
-      summary: Corregir carga logística
-      description: Recibe el error detectado en la carga y registra la corrección correspondiente en el sistema logístico.
+      tags:
+        - Logística
+      operationId: registrarCorreccionCarga
+      summary: Registrar corrección de carga
+      description: Crea o ejecuta una nueva operación del módulo CorreccionCarga.
       requestBody:
         required: true
         content:
@@ -39,29 +42,132 @@ paths:
               id_carga: "CARGA-000654"
               id_error: "ERR-000125"
               tipo_error: "cantidad_incorrecta"
-              correccion:
-                id_producto: "SKU_IK_1.5L"
-                cantidad_correcta: 118
-                observacion: "Se ajusta cantidad por diferencia detectada en escaneo."
+              correccion: "Se ajusta cantidad por diferencia detectada en escaneo."
       responses:
-        '200':
-          description: Corrección de carga registrada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CorreccionCargaResponseExito'
+              example:
+                ok: true
+                id_correccion: "CORR-000321"
+                estado: "corregido"
+                mensaje: "Corrección de carga registrada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CorreccionCargaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de corrección enviada es inválida o incompleta."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /carga/correcciones/{id_correccion}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarCorreccionCarga
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_correccion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "COR-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseConsultaExito'
+              example:
+                ok: true
+                id_correccion: "COR-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
         '404':
-          description: Error o carga no encontrada
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CorreccionCargaResponseError404'
+              example:
+                ok: false
+                error: "CARGA_O_ERROR_NO_ENCONTRADO"
+                detalle: "No se encontró la carga o el error asociado a la corrección solicitada."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarCorreccionCarga
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_correccion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "COR-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorreccionCargaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseActualizarExito'
+              example:
+                ok: true
+                id_correccion: "COR-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de corrección enviada es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorreccionCargaResponseError404'
+              example:
+                ok: false
+                error: "CARGA_O_ERROR_NO_ENCONTRADO"
+                detalle: "No se encontró la carga o el error asociado a la corrección solicitada."
 
 components:
   schemas:
@@ -105,6 +211,22 @@ components:
               maxLength: 250
               example: "Se ajusta cantidad por diferencia detectada en escaneo."
 
+    CorreccionCargaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     CorreccionCargaResponseExito:
       type: object
       properties:
@@ -122,6 +244,42 @@ components:
         mensaje:
           type: string
           example: "Corrección de carga registrada correctamente"
+
+    CorreccionCargaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_correccion:
+          type: string
+          maxLength: 50
+          example: "COR-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    CorreccionCargaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_correccion:
+          type: string
+          maxLength: 50
+          example: "COR-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
 
     CorreccionCargaResponseError400:
       type: object
@@ -152,3 +310,18 @@ components:
           type: string
           maxLength: 250
           example: "No se encontró la carga o el error asociado a la corrección solicitada."
+
+    CorreccionCargaResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /pod/firma-digital:
+  /pod/firmas:
     post:
+      tags:
+        - App
+      operationId: registrarFirmaDigitalPOD
       summary: Registrar firma digital POD
-      description: Registra la firma digital del receptor como evidencia de entrega del pedido.
+      description: Crea o ejecuta una nueva operación del módulo FirmaDigitalPOD.
       requestBody:
         required: true
         content:
@@ -42,24 +45,178 @@ paths:
               documento_receptor: "45678912"
               firma_base64: "iVBORw0KGgoAAAANSUhEUgAA..."
       responses:
-        '200':
-          description: Firma digital registrada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FirmaDigitalPODResponseExito'
+              example:
+                ok: true
+                id_evidencia: "POD-000321"
+                estado: "registrado"
+                mensaje: "Firma digital POD registrada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FirmaDigitalPODResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de firma digital es inválida o incompleta."
         '409':
-          description: La entrega ya cuenta con evidencia registrada
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FirmaDigitalPODResponseError409'
+              example:
+                ok: false
+                error: "EVIDENCIA_YA_REGISTRADA"
+                detalle: "La entrega enviada ya cuenta con una evidencia POD registrada."
+
+  /pod/firmas/{id_firma}:
+    get:
+      tags:
+        - App
+      operationId: consultarFirmaDigitalPOD
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_firma
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "POD-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseConsultaExito'
+              example:
+                ok: true
+                id_firma: "POD-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - App
+      operationId: actualizarFirmaDigitalPOD
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_firma
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "POD-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirmaDigitalPODRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseActualizarExito'
+              example:
+                ok: true
+                id_firma: "POD-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de firma digital es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - App
+      operationId: anularFirmaDigitalPOD
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_firma
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "POD-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseAnularExito'
+              example:
+                ok: true
+                id_firma: "POD-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirmaDigitalPODResponseError409'
+              example:
+                ok: false
+                error: "EVIDENCIA_YA_REGISTRADA"
+                detalle: "La entrega enviada ya cuenta con una evidencia POD registrada."
 
 components:
   schemas:
@@ -94,6 +251,22 @@ components:
           description: "Imagen de la firma digital codificada en Base64."
           example: "iVBORw0KGgoAAAANSUhEUgAA..."
 
+    FirmaDigitalPODRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     FirmaDigitalPODResponseExito:
       type: object
       properties:
@@ -112,6 +285,60 @@ components:
           type: string
           example: "Firma digital POD registrada correctamente"
 
+    FirmaDigitalPODResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_firma:
+          type: string
+          maxLength: 50
+          example: "POD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    FirmaDigitalPODResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_firma:
+          type: string
+          maxLength: 50
+          example: "POD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    FirmaDigitalPODResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_firma:
+          type: string
+          maxLength: 50
+          example: "POD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     FirmaDigitalPODResponseError400:
       type: object
       properties:
@@ -126,6 +353,21 @@ components:
           type: string
           maxLength: 250
           example: "La información de firma digital es inválida o incompleta."
+
+    FirmaDigitalPODResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     FirmaDigitalPODResponseError409:
       type: object

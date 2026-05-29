@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /pedidos/cerrar:
+  /pedidos/cierres:
     post:
-      summary: Cerrar pedido ERP
-      description: Recibe la información del pedido completado y actualiza su estado como cerrado dentro del ERP.
+      tags:
+        - ERP
+      operationId: registrarCierrePedidoERP
+      summary: Registrar solicitud de cierre de pedido
+      description: Crea o ejecuta una nueva operación del módulo CierrePedidoERP.
       requestBody:
         required: true
         content:
@@ -36,44 +39,143 @@ paths:
             schema:
               $ref: '#/components/schemas/CierrePedidoERPRequest'
             example:
-              id_pedido: "PED-000125"
               estado_final: "cerrado"
               fecha_cierre: "2026-05-29"
               observacion: "Pedido entregado y liquidado correctamente."
       responses:
-        '200':
-          description: Pedido cerrado correctamente en ERP
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CierrePedidoERPResponseExito'
+              example:
+                ok: true
+                id_pedido: "PED-000125"
+                estado: "cerrado"
+                mensaje: "Pedido cerrado correctamente en ERP"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CierrePedidoERPResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información enviada para el cierre del pedido es inválida o incompleta."
         '409':
-          description: Pedido ya cerrado previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CierrePedidoERPResponseError409'
+              example:
+                ok: false
+                error: "PEDIDO_YA_CERRADO"
+                detalle: "El pedido enviado ya se encuentra cerrado en el ERP."
+
+  /pedidos/cierres/{id_cierre}:
+    get:
+      tags:
+        - ERP
+      operationId: consultarCierrePedidoERP
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_cierre
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "CIERRE-000125"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseConsultaExito'
+              example:
+                ok: true
+                id_cierre: "CIERRE-000125"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - ERP
+      operationId: actualizarCierrePedidoERP
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_cierre
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "CIERRE-000125"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CierrePedidoERPRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseActualizarExito'
+              example:
+                ok: true
+                id_cierre: "CIERRE-000125"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información enviada para el cierre del pedido es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CierrePedidoERPResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
     CierrePedidoERPRequest:
       type: object
       required:
-        - id_pedido
         - estado_final
         - fecha_cierre
       properties:
-        id_pedido:
-          type: string
-          maxLength: 50
-          description: "Código único del pedido que será cerrado en el ERP."
-          example: "PED-000125"
         estado_final:
           type: string
           maxLength: 30
@@ -89,6 +191,22 @@ components:
           maxLength: 250
           description: "Comentario adicional asociado al cierre del pedido."
           example: "Pedido entregado y liquidado correctamente."
+
+    CierrePedidoERPRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
 
     CierrePedidoERPResponseExito:
       type: object
@@ -108,6 +226,42 @@ components:
           type: string
           example: "Pedido cerrado correctamente en ERP"
 
+    CierrePedidoERPResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_cierre:
+          type: string
+          maxLength: 50
+          example: "CIERRE-000125"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    CierrePedidoERPResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_cierre:
+          type: string
+          maxLength: 50
+          example: "CIERRE-000125"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
     CierrePedidoERPResponseError400:
       type: object
       properties:
@@ -122,6 +276,21 @@ components:
           type: string
           maxLength: 250
           example: "La información enviada para el cierre del pedido es inválida o incompleta."
+
+    CierrePedidoERPResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     CierrePedidoERPResponseError409:
       type: object

@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /documentos-transporte/validar:
+  /documentos-transporte/validaciones:
     post:
-      summary: Validar documentos de transporte
-      description: Verifica la validez de los documentos requeridos antes de autorizar el despacho logístico.
+      tags:
+        - Logística
+      operationId: registrarValidacionDocumentosTransporte
+      summary: Ejecutar validación de documentos
+      description: Crea o ejecuta una nueva operación del módulo ValidacionDocumentosTransporte.
       requestBody:
         required: true
         content:
@@ -38,30 +41,131 @@ paths:
             example:
               id_despacho: "DESP-000125"
               id_transportista: "TR-000125"
-              documentos:
-                - tipo_documento: "guia_remision"
-                  numero_documento: "T001-00001234"
-                - tipo_documento: "licencia_conducir"
-                  numero_documento: "Q12345678"
       responses:
-        '200':
-          description: Documentos validados correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseExito'
+              example:
+                ok: true
+                validacion_correcta: true
+                estado: "documentos_validados"
+                mensaje: "Documentos de transporte validados correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información documentaria enviada es inválida o incompleta."
         '409':
-          description: Documentos inválidos o incompletos
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseError409'
+              example:
+                ok: false
+                error: "DOCUMENTOS_INVALIDOS"
+                detalle: "Uno o más documentos requeridos no son válidos o se encuentran vencidos."
+
+  /documentos-transporte/validaciones/{id_validacion}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarValidacionDocumentosTransporte
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VDT-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseConsultaExito'
+              example:
+                ok: true
+                id_validacion: "VDT-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarValidacionDocumentosTransporte
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_validacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VDT-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionDocumentosTransporteRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseActualizarExito'
+              example:
+                ok: true
+                id_validacion: "VDT-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información documentaria enviada es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionDocumentosTransporteResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
@@ -96,6 +200,22 @@ components:
                 maxLength: 50
                 example: "T001-00001234"
 
+    ValidacionDocumentosTransporteRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     ValidacionDocumentosTransporteResponseExito:
       type: object
       properties:
@@ -113,6 +233,42 @@ components:
           type: string
           example: "Documentos de transporte validados correctamente"
 
+    ValidacionDocumentosTransporteResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VDT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    ValidacionDocumentosTransporteResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_validacion:
+          type: string
+          maxLength: 50
+          example: "VDT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
     ValidacionDocumentosTransporteResponseError400:
       type: object
       properties:
@@ -127,6 +283,21 @@ components:
           type: string
           maxLength: 250
           example: "La información documentaria enviada es inválida o incompleta."
+
+    ValidacionDocumentosTransporteResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     ValidacionDocumentosTransporteResponseError409:
       type: object

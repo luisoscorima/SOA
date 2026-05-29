@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /consolidacion/estibar:
+  /consolidacion/estibados:
     post:
-      summary: Consolidar y estibar productos
-      description: Recibe productos preparados y genera pallets organizados para despacho.
+      tags:
+        - WMS
+      operationId: registrarConsolidacionEstibado
+      summary: Registrar consolidación y estibado
+      description: Crea o ejecuta una nueva operación del módulo ConsolidacionEstibado.
       requestBody:
         required: true
         content:
@@ -38,29 +41,180 @@ paths:
             example:
               id_operacion: "OP-000321"
               tipo_estibado: "despacho"
-              productos:
-                - id_producto: "SKU_IK_1.5L"
-                  cantidad: 120
-                  peso_total: 350.5
       responses:
-        '200':
-          description: Productos consolidados y estibados correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConsolidacionEstibadoResponseExito'
+              example:
+                ok: true
+                id_pallet: "PALLET-000987"
+                cantidad_productos: 120
+                estado: "estibado"
+                mensaje: "Productos consolidados y estibados correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConsolidacionEstibadoResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de productos enviada es inválida o incompleta."
         '409':
-          description: Productos ya consolidados previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConsolidacionEstibadoResponseError409'
+              example:
+                ok: false
+                error: "PRODUCTOS_YA_ESTIBADOS"
+                detalle: "Los productos enviados ya fueron asociados previamente a un pallet."
+
+  /consolidacion/estibados/{id_consolidacion}:
+    get:
+      tags:
+        - WMS
+      operationId: consultarConsolidacionEstibado
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_consolidacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "EST-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseConsultaExito'
+              example:
+                ok: true
+                id_consolidacion: "EST-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - WMS
+      operationId: actualizarConsolidacionEstibado
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_consolidacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "EST-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsolidacionEstibadoRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseActualizarExito'
+              example:
+                ok: true
+                id_consolidacion: "EST-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de productos enviada es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - WMS
+      operationId: anularConsolidacionEstibado
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_consolidacion
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "EST-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseAnularExito'
+              example:
+                ok: true
+                id_consolidacion: "EST-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsolidacionEstibadoResponseError409'
+              example:
+                ok: false
+                error: "PRODUCTOS_YA_ESTIBADOS"
+                detalle: "Los productos enviados ya fueron asociados previamente a un pallet."
 
 components:
   schemas:
@@ -100,6 +254,22 @@ components:
                 minimum: 0
                 example: 350.5
 
+    ConsolidacionEstibadoRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     ConsolidacionEstibadoResponseExito:
       type: object
       properties:
@@ -121,6 +291,60 @@ components:
           type: string
           example: "Productos consolidados y estibados correctamente"
 
+    ConsolidacionEstibadoResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_consolidacion:
+          type: string
+          maxLength: 50
+          example: "EST-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    ConsolidacionEstibadoResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_consolidacion:
+          type: string
+          maxLength: 50
+          example: "EST-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    ConsolidacionEstibadoResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_consolidacion:
+          type: string
+          maxLength: 50
+          example: "EST-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     ConsolidacionEstibadoResponseError400:
       type: object
       properties:
@@ -135,6 +359,21 @@ components:
           type: string
           maxLength: 250
           example: "La información de productos enviada es inválida o incompleta."
+
+    ConsolidacionEstibadoResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     ConsolidacionEstibadoResponseError409:
       type: object

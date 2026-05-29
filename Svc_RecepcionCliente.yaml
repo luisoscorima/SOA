@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /recepciones/confirmar:
+  /recepciones:
     post:
-      summary: Confirmar recepción de pedido
-      description: Registra la confirmación de recepción del pedido realizada por el cliente.
+      tags:
+        - Cliente
+      operationId: registrarRecepcionCliente
+      summary: Confirmar recepción del cliente
+      description: Crea o ejecuta una nueva operación del módulo RecepcionCliente.
       requestBody:
         required: true
         content:
@@ -42,24 +45,130 @@ paths:
               estado_recepcion: "recibido"
               observacion: "Pedido recibido conforme."
       responses:
-        '200':
-          description: Recepción confirmada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecepcionClienteResponseExito'
+              example:
+                ok: true
+                id_confirmacion: "CONF-000321"
+                estado: "confirmado"
+                mensaje: "Recepción del pedido confirmada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecepcionClienteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de recepción enviada es inválida o incompleta."
         '409':
-          description: Recepción ya confirmada previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecepcionClienteResponseError409'
+              example:
+                ok: false
+                error: "RECEPCION_YA_CONFIRMADA"
+                detalle: "El pedido enviado ya cuenta con una recepción confirmada previamente."
+
+  /recepciones/{id_recepcion}:
+    get:
+      tags:
+        - Cliente
+      operationId: consultarRecepcionCliente
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_recepcion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "REC-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseConsultaExito'
+              example:
+                ok: true
+                id_recepcion: "REC-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Cliente
+      operationId: actualizarRecepcionCliente
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_recepcion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "REC-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecepcionClienteRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseActualizarExito'
+              example:
+                ok: true
+                id_recepcion: "REC-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de recepción enviada es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecepcionClienteResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
@@ -95,6 +204,22 @@ components:
           description: "Comentario adicional registrado por el cliente."
           example: "Pedido recibido conforme."
 
+    RecepcionClienteRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     RecepcionClienteResponseExito:
       type: object
       properties:
@@ -113,6 +238,42 @@ components:
           type: string
           example: "Recepción del pedido confirmada correctamente"
 
+    RecepcionClienteResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_recepcion:
+          type: string
+          maxLength: 50
+          example: "REC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    RecepcionClienteResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_recepcion:
+          type: string
+          maxLength: 50
+          example: "REC-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
     RecepcionClienteResponseError400:
       type: object
       properties:
@@ -127,6 +288,21 @@ components:
           type: string
           maxLength: 250
           example: "La información de recepción enviada es inválida o incompleta."
+
+    RecepcionClienteResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     RecepcionClienteResponseError409:
       type: object

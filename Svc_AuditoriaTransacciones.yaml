@@ -27,8 +27,11 @@ servers:
 paths:
   /auditoria/transacciones:
     post:
+      tags:
+        - Seguridad
+      operationId: registrarAuditoriaTransacciones
       summary: Registrar auditoría de transacción
-      description: Registra eventos críticos y operaciones realizadas dentro del sistema para fines de auditoría y seguridad.
+      description: Crea o ejecuta una nueva operación del módulo AuditoriaTransacciones.
       requestBody:
         required: true
         content:
@@ -43,24 +46,130 @@ paths:
               fecha_evento: "2026-05-29T16:30:00"
               detalle: "Actualización automática de stock ejecutada correctamente."
       responses:
-        '200':
-          description: Auditoría registrada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditoriaTransaccionesResponseExito'
+              example:
+                ok: true
+                id_auditoria: "AUD-000321"
+                estado: "registrado"
+                mensaje: "Evento de auditoría registrado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditoriaTransaccionesResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información del evento de auditoría es inválida o incompleta."
         '409':
-          description: Evento ya registrado previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditoriaTransaccionesResponseError409'
+              example:
+                ok: false
+                error: "EVENTO_YA_REGISTRADO"
+                detalle: "El evento enviado ya fue registrado previamente en auditoría."
+
+  /auditoria/transacciones/{id_auditoria}:
+    get:
+      tags:
+        - Seguridad
+      operationId: consultarAuditoriaTransacciones
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_auditoria
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "AUD-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseConsultaExito'
+              example:
+                ok: true
+                id_auditoria: "AUD-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Seguridad
+      operationId: actualizarAuditoriaTransacciones
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_auditoria
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "AUD-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditoriaTransaccionesRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseActualizarExito'
+              example:
+                ok: true
+                id_auditoria: "AUD-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información del evento de auditoría es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditoriaTransaccionesResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
@@ -103,6 +212,22 @@ components:
           description: "Descripción detallada del evento registrado."
           example: "Actualización automática de stock ejecutada correctamente."
 
+    AuditoriaTransaccionesRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     AuditoriaTransaccionesResponseExito:
       type: object
       properties:
@@ -121,6 +246,42 @@ components:
           type: string
           example: "Evento de auditoría registrado correctamente"
 
+    AuditoriaTransaccionesResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_auditoria:
+          type: string
+          maxLength: 50
+          example: "AUD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    AuditoriaTransaccionesResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_auditoria:
+          type: string
+          maxLength: 50
+          example: "AUD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
     AuditoriaTransaccionesResponseError400:
       type: object
       properties:
@@ -135,6 +296,21 @@ components:
           type: string
           maxLength: 250
           example: "La información del evento de auditoría es inválida o incompleta."
+
+    AuditoriaTransaccionesResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     AuditoriaTransaccionesResponseError409:
       type: object

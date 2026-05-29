@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /productos/descargar:
+  /productos/descargas:
     post:
-      summary: Descargar productos
-      description: Registra la descarga de mercancía realizada por el repartidor en el punto de entrega.
+      tags:
+        - Repartidor
+      operationId: registrarDescargaProductos
+      summary: Registrar descarga de productos
+      description: Crea o ejecuta una nueva operación del módulo DescargaProductos.
       requestBody:
         required: true
         content:
@@ -39,28 +42,131 @@ paths:
               id_entrega: "ENT-000125"
               id_repartidor: "REP-001"
               id_cliente: 150
-              productos:
-                - id_producto: "SKU_IK_1.5L"
-                  cantidad_descargada: 120
       responses:
-        '200':
-          description: Descarga de productos registrada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DescargaProductosResponseExito'
+              example:
+                ok: true
+                id_descarga: "DESC-000321"
+                estado_entrega: "descargado"
+                mensaje: "Descarga de productos registrada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DescargaProductosResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La lista de productos descargados es inválida o incompleta."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /productos/descargas/{id_descarga}:
+    get:
+      tags:
+        - Repartidor
+      operationId: consultarDescargaProductos
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_descarga
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "DES-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseConsultaExito'
+              example:
+                ok: true
+                id_descarga: "DES-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
         '404':
-          description: Entrega no encontrada
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DescargaProductosResponseError404'
+              example:
+                ok: false
+                error: "ENTREGA_NO_ENCONTRADA"
+                detalle: "No se encontró una entrega registrada con el identificador enviado."
+
+    put:
+      tags:
+        - Repartidor
+      operationId: actualizarDescargaProductos
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_descarga
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "DES-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DescargaProductosRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseActualizarExito'
+              example:
+                ok: true
+                id_descarga: "DES-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La lista de productos descargados es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescargaProductosResponseError404'
+              example:
+                ok: false
+                error: "ENTREGA_NO_ENCONTRADA"
+                detalle: "No se encontró una entrega registrada con el identificador enviado."
 
 components:
   schemas:
@@ -100,6 +206,22 @@ components:
                 minimum: 1
                 example: 120
 
+    DescargaProductosRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     DescargaProductosResponseExito:
       type: object
       properties:
@@ -117,6 +239,42 @@ components:
         mensaje:
           type: string
           example: "Descarga de productos registrada correctamente"
+
+    DescargaProductosResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_descarga:
+          type: string
+          maxLength: 50
+          example: "DES-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    DescargaProductosResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_descarga:
+          type: string
+          maxLength: 50
+          example: "DES-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
 
     DescargaProductosResponseError400:
       type: object
@@ -147,3 +305,18 @@ components:
           type: string
           maxLength: 250
           example: "No se encontró una entrega registrada con el identificador enviado."
+
+    DescargaProductosResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

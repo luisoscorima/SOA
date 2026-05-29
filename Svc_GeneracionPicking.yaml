@@ -25,43 +25,200 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /picking/generar:
+  /picking:
     post:
+      tags:
+        - WMS
+      operationId: registrarGeneracionPicking
       summary: Generar lista de picking
-      description: Recibe un pedido y genera una lista de picking con los productos, cantidades y ubicaciones requeridas.
+      description: Crea o ejecuta una nueva operación del módulo GeneracionPicking.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PickingRequest'
+              $ref: '#/components/schemas/GeneracionPickingRequest'
             example:
               id_pedido: "PED-000125"
               id_almacen: "ALM_LIMA"
               prioridad: "alta"
       responses:
-        '200':
-          description: Lista de picking generada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PickingResponseExito'
+                $ref: '#/components/schemas/GeneracionPickingResponseExito'
+              example:
+                ok: true
+                id_lista_picking: "PICK-000789"
+                id_pedido: "PED-000125"
+                mensaje: "Lista de picking generada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PickingResponseError400'
-        '404':
-          description: Pedido no encontrado
+                $ref: '#/components/schemas/GeneracionPickingResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador del pedido o almacén no cumple con el formato requerido."
+        '409':
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PickingResponseError404'
+                $ref: '#/components/schemas/GeneracionPickingResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /picking/{id_lista_picking}:
+    get:
+      tags:
+        - WMS
+      operationId: consultarGeneracionPicking
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_lista_picking
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "PICK-000789"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseConsultaExito'
+              example:
+                ok: true
+                id_lista_picking: "PICK-000789"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseError404'
+              example:
+                ok: false
+                error: "PEDIDO_NO_ENCONTRADO"
+                detalle: "No existe un pedido registrado con el identificador enviado."
+
+    put:
+      tags:
+        - WMS
+      operationId: actualizarGeneracionPicking
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_lista_picking
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "PICK-000789"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneracionPickingRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseActualizarExito'
+              example:
+                ok: true
+                id_lista_picking: "PICK-000789"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El identificador del pedido o almacén no cumple con el formato requerido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseError404'
+              example:
+                ok: false
+                error: "PEDIDO_NO_ENCONTRADO"
+                detalle: "No existe un pedido registrado con el identificador enviado."
+
+    delete:
+      tags:
+        - WMS
+      operationId: anularGeneracionPicking
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_lista_picking
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "PICK-000789"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseAnularExito'
+              example:
+                ok: true
+                id_lista_picking: "PICK-000789"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseError404'
+              example:
+                ok: false
+                error: "PEDIDO_NO_ENCONTRADO"
+                detalle: "No existe un pedido registrado con el identificador enviado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneracionPickingResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
 
 components:
   schemas:
-    PickingRequest:
+    GeneracionPickingRequest:
       type: object
       required:
         - id_pedido
@@ -83,7 +240,23 @@ components:
           description: "Nivel de prioridad asignado al pedido."
           example: "alta"
 
-    PickingResponseExito:
+    GeneracionPickingRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
+    GeneracionPickingResponseExito:
       type: object
       properties:
         ok:
@@ -118,7 +291,61 @@ components:
           type: string
           example: "Lista de picking generada correctamente"
 
-    PickingResponseError400:
+    GeneracionPickingResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_lista_picking:
+          type: string
+          maxLength: 50
+          example: "PICK-000789"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    GeneracionPickingResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_lista_picking:
+          type: string
+          maxLength: 50
+          example: "PICK-000789"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    GeneracionPickingResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_lista_picking:
+          type: string
+          maxLength: 50
+          example: "PICK-000789"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
+    GeneracionPickingResponseError400:
       type: object
       properties:
         ok:
@@ -133,7 +360,7 @@ components:
           maxLength: 250
           example: "El identificador del pedido o almacén no cumple con el formato requerido."
 
-    PickingResponseError404:
+    GeneracionPickingResponseError404:
       type: object
       properties:
         ok:
@@ -147,3 +374,18 @@ components:
           type: string
           maxLength: 250
           example: "No existe un pedido registrado con el identificador enviado."
+
+    GeneracionPickingResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

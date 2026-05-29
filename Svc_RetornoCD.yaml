@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /retornos/centro-distribucion:
+  /retornos:
     post:
+      tags:
+        - Logística
+      operationId: registrarRetornoCD
       summary: Registrar retorno a centro de distribución
-      description: Registra la llegada del vehículo al centro de distribución luego de completar la ruta de entrega.
+      description: Crea o ejecuta una nueva operación del módulo RetornoCD.
       requestBody:
         required: true
         content:
@@ -42,24 +45,178 @@ paths:
               id_centro_distribucion: "CD_PUCUSANA"
               hora_llegada: "2026-05-29T18:30:00"
       responses:
-        '200':
-          description: Retorno registrado correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RetornoCDResponseExito'
+              example:
+                ok: true
+                id_retorno: "RETCD-000321"
+                estado: "retornado"
+                mensaje: "Retorno al centro de distribución registrado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RetornoCDResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de retorno enviada es inválida o incompleta."
         '409':
-          description: Retorno ya registrado previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RetornoCDResponseError409'
+              example:
+                ok: false
+                error: "RETORNO_YA_REGISTRADO"
+                detalle: "El vehículo ya cuenta con un retorno registrado para la ruta indicada."
+
+  /retornos/{id_retorno}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarRetornoCD
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_retorno
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "RETCD-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseConsultaExito'
+              example:
+                ok: true
+                id_retorno: "RETCD-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarRetornoCD
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_retorno
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "RETCD-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetornoCDRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseActualizarExito'
+              example:
+                ok: true
+                id_retorno: "RETCD-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La información de retorno enviada es inválida o incompleta."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - Logística
+      operationId: anularRetornoCD
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_retorno
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "RETCD-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseAnularExito'
+              example:
+                ok: true
+                id_retorno: "RETCD-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetornoCDResponseError409'
+              example:
+                ok: false
+                error: "RETORNO_YA_REGISTRADO"
+                detalle: "El vehículo ya cuenta con un retorno registrado para la ruta indicada."
 
 components:
   schemas:
@@ -97,6 +254,22 @@ components:
           description: "Fecha y hora de llegada del vehículo al centro de distribución."
           example: "2026-05-29T18:30:00"
 
+    RetornoCDRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     RetornoCDResponseExito:
       type: object
       properties:
@@ -115,6 +288,60 @@ components:
           type: string
           example: "Retorno al centro de distribución registrado correctamente"
 
+    RetornoCDResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_retorno:
+          type: string
+          maxLength: 50
+          example: "RETCD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    RetornoCDResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_retorno:
+          type: string
+          maxLength: 50
+          example: "RETCD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    RetornoCDResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_retorno:
+          type: string
+          maxLength: 50
+          example: "RETCD-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     RetornoCDResponseError400:
       type: object
       properties:
@@ -129,6 +356,21 @@ components:
           type: string
           maxLength: 250
           example: "La información de retorno enviada es inválida o incompleta."
+
+    RetornoCDResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     RetornoCDResponseError409:
       type: object

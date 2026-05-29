@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /entregas/ventanas/programar:
+  /entregas/ventanas:
     post:
+      tags:
+        - Logística
+      operationId: registrarProgramacionVentanasEntrega
       summary: Programar ventana de entrega
-      description: Asigna un horario de entrega a un pedido según disponibilidad operativa y recepción del cliente.
+      description: Crea o ejecuta una nueva operación del módulo ProgramacionVentanasEntrega.
       requestBody:
         required: true
         content:
@@ -42,24 +45,179 @@ paths:
               ventana_preferida: "09:00-12:00"
               direccion_entrega: "Av. Principal 123, Lima"
       responses:
-        '200':
-          description: Ventana de entrega programada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseExito'
+              example:
+                ok: true
+                id_programacion: "VENT-000321"
+                horario_asignado: "09:00-12:00"
+                estado: "programado"
+                mensaje: "Ventana de entrega programada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La fecha o ventana de entrega enviada es inválida."
         '409':
-          description: No existe disponibilidad para la ventana solicitada
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError409'
+              example:
+                ok: false
+                error: "VENTANA_NO_DISPONIBLE"
+                detalle: "No existe disponibilidad para la ventana de entrega solicitada."
+
+  /entregas/ventanas/{id_ventana}:
+    get:
+      tags:
+        - Logística
+      operationId: consultarProgramacionVentanasEntrega
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_ventana
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VEN-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseConsultaExito'
+              example:
+                ok: true
+                id_ventana: "VEN-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Logística
+      operationId: actualizarProgramacionVentanasEntrega
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_ventana
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VEN-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgramacionVentanasEntregaRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseActualizarExito'
+              example:
+                ok: true
+                id_ventana: "VEN-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "La fecha o ventana de entrega enviada es inválida."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    delete:
+      tags:
+        - Logística
+      operationId: anularProgramacionVentanasEntrega
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_ventana
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "VEN-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseAnularExito'
+              example:
+                ok: true
+                id_ventana: "VEN-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramacionVentanasEntregaResponseError409'
+              example:
+                ok: false
+                error: "VENTANA_NO_DISPONIBLE"
+                detalle: "No existe disponibilidad para la ventana de entrega solicitada."
 
 components:
   schemas:
@@ -95,6 +253,22 @@ components:
           description: "Dirección de entrega del pedido."
           example: "Av. Principal 123, Lima"
 
+    ProgramacionVentanasEntregaRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     ProgramacionVentanasEntregaResponseExito:
       type: object
       properties:
@@ -117,6 +291,60 @@ components:
           type: string
           example: "Ventana de entrega programada correctamente"
 
+    ProgramacionVentanasEntregaResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_ventana:
+          type: string
+          maxLength: 50
+          example: "VEN-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    ProgramacionVentanasEntregaResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_ventana:
+          type: string
+          maxLength: 50
+          example: "VEN-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    ProgramacionVentanasEntregaResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_ventana:
+          type: string
+          maxLength: 50
+          example: "VEN-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
+
     ProgramacionVentanasEntregaResponseError400:
       type: object
       properties:
@@ -131,6 +359,21 @@ components:
           type: string
           maxLength: 250
           example: "La fecha o ventana de entrega enviada es inválida."
+
+    ProgramacionVentanasEntregaResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
 
     ProgramacionVentanasEntregaResponseError409:
       type: object

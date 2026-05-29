@@ -25,16 +25,19 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /erp-wms/sincronizar-pedido:
+  /erp-wms/sincronizaciones:
     post:
+      tags:
+        - Integración
+      operationId: registrarSincronizacionERP_WMS
       summary: Sincronizar pedido ERP con WMS
-      description: Recibe un pedido generado en el ERP y lo transforma en un pedido compatible con el sistema WMS.
+      description: Crea o ejecuta una nueva operación del módulo SincronizacionERP_WMS.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PedidoERPRequest'
+              $ref: '#/components/schemas/SincronizacionERP_WMSRequest'
             example:
               id_pedido_erp: "ERP-000125"
               id_cliente: 150
@@ -43,28 +46,133 @@ paths:
               cantidad: 120
               id_centro_distribucion: "CD_PUCUSANA"
       responses:
-        '200':
-          description: Pedido sincronizado correctamente con el WMS
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PedidoWMSResponseExito'
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseExito'
+              example:
+                ok: true
+                id_pedido_wms: "WMS-000987"
+                mensaje: "Pedido sincronizado correctamente con el WMS"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PedidoWMSResponseError400'
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El pedido ERP contiene datos incompletos o inválidos."
         '409':
-          description: Pedido ya sincronizado previamente
+          description: Conflicto o duplicado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PedidoWMSResponseError409'
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseError409'
+              example:
+                ok: false
+                error: "PEDIDO_DUPLICADO"
+                detalle: "El pedido ERP ya fue sincronizado previamente con el WMS."
+
+  /erp-wms/sincronizaciones/{id_sincronizacion}:
+    get:
+      tags:
+        - Integración
+      operationId: consultarSincronizacionERP_WMS
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_sincronizacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "SYNC-000987"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseConsultaExito'
+              example:
+                ok: true
+                id_sincronizacion: "SYNC-000987"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
+
+    put:
+      tags:
+        - Integración
+      operationId: actualizarSincronizacionERP_WMS
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_sincronizacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "SYNC-000987"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SincronizacionERP_WMSRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseActualizarExito'
+              example:
+                ok: true
+                id_sincronizacion: "SYNC-000987"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El pedido ERP contiene datos incompletos o inválidos."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SincronizacionERP_WMSResponseError404'
+              example:
+                ok: false
+                error: "RECURSO_NO_ENCONTRADO"
+                detalle: "No se encontró el registro solicitado."
 
 components:
   schemas:
-    PedidoERPRequest:
+    SincronizacionERP_WMSRequest:
       type: object
       required:
         - id_pedido_erp
@@ -103,7 +211,23 @@ components:
           description: "Código del centro de distribución destino."
           example: "CD_PUCUSANA"
 
-    PedidoWMSResponseExito:
+    SincronizacionERP_WMSRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
+    SincronizacionERP_WMSResponseExito:
       type: object
       properties:
         ok:
@@ -117,7 +241,43 @@ components:
           type: string
           example: "Pedido sincronizado correctamente con el WMS"
 
-    PedidoWMSResponseError400:
+    SincronizacionERP_WMSResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_sincronizacion:
+          type: string
+          maxLength: 50
+          example: "SYNC-000987"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    SincronizacionERP_WMSResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_sincronizacion:
+          type: string
+          maxLength: 50
+          example: "SYNC-000987"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    SincronizacionERP_WMSResponseError400:
       type: object
       properties:
         ok:
@@ -132,7 +292,22 @@ components:
           maxLength: 250
           example: "El pedido ERP contiene datos incompletos o inválidos."
 
-    PedidoWMSResponseError409:
+    SincronizacionERP_WMSResponseError404:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "RECURSO_NO_ENCONTRADO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "No se encontró el registro solicitado."
+
+    SincronizacionERP_WMSResponseError409:
       type: object
       properties:
         ok:

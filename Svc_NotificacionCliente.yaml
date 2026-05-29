@@ -25,10 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /notificaciones/enviar:
+  /notificaciones:
     post:
+      tags:
+        - Comunicación
+      operationId: registrarNotificacionCliente
       summary: Enviar notificación al cliente
-      description: Envía una notificación informativa al cliente mediante App móvil o SMS sobre el estado de su pedido.
+      description: Crea o ejecuta una nueva operación del módulo NotificacionCliente.
       requestBody:
         required: true
         content:
@@ -42,24 +45,178 @@ paths:
               estado_pedido: "en_ruta"
               mensaje: "Su pedido se encuentra en camino."
       responses:
-        '200':
-          description: Notificación enviada correctamente
+        '201':
+          description: Operación registrada correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificacionClienteResponseExito'
+              example:
+                ok: true
+                id_notificacion: "NOTIF-000321"
+                estado_envio: "enviado"
+                mensaje: "Notificación enviada correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificacionClienteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El canal o contenido del mensaje enviado es inválido."
+        '409':
+          description: Conflicto o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
+
+  /notificaciones/{id_notificacion}:
+    get:
+      tags:
+        - Comunicación
+      operationId: consultarNotificacionCliente
+      summary: Consultar registro
+      description: Consulta el resultado de una operación previamente registrada.
+      parameters:
+        - name: id_notificacion
+          in: path
+          required: true
+          description: Identificador del registro a consultar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "NOT-000321"
+      responses:
+        '200':
+          description: Consulta realizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseConsultaExito'
+              example:
+                ok: true
+                id_notificacion: "NOT-000321"
+                estado: "registrado"
+                mensaje: "Consulta realizada correctamente"
         '404':
-          description: Cliente o pedido no encontrado
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificacionClienteResponseError404'
+              example:
+                ok: false
+                error: "CLIENTE_O_PEDIDO_NO_ENCONTRADO"
+                detalle: "No se encontró el cliente o pedido asociado a la notificación."
+
+    put:
+      tags:
+        - Comunicación
+      operationId: actualizarNotificacionCliente
+      summary: Actualizar registro
+      description: Actualiza o corrige el estado de un registro existente.
+      parameters:
+        - name: id_notificacion
+          in: path
+          required: true
+          description: Identificador del registro a actualizar.
+          schema:
+            type: string
+            maxLength: 50
+            example: "NOT-000321"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificacionClienteRequestActualizar'
+      responses:
+        '200':
+          description: Registro actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseActualizarExito'
+              example:
+                ok: true
+                id_notificacion: "NOT-000321"
+                estado: "actualizado"
+                mensaje: "Registro actualizado correctamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseError400'
+              example:
+                ok: false
+                error: "DATOS_INVALIDOS"
+                detalle: "El canal o contenido del mensaje enviado es inválido."
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseError404'
+              example:
+                ok: false
+                error: "CLIENTE_O_PEDIDO_NO_ENCONTRADO"
+                detalle: "No se encontró el cliente o pedido asociado a la notificación."
+
+    delete:
+      tags:
+        - Comunicación
+      operationId: anularNotificacionCliente
+      summary: Anular registro
+      description: Anula o cancela un registro previamente creado.
+      parameters:
+        - name: id_notificacion
+          in: path
+          required: true
+          description: Identificador del registro a anular.
+          schema:
+            type: string
+            maxLength: 50
+            example: "NOT-000321"
+      responses:
+        '200':
+          description: Registro anulado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseAnularExito'
+              example:
+                ok: true
+                id_notificacion: "NOT-000321"
+                estado: "anulado"
+                mensaje: "Registro anulado correctamente"
+        '404':
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseError404'
+              example:
+                ok: false
+                error: "CLIENTE_O_PEDIDO_NO_ENCONTRADO"
+                detalle: "No se encontró el cliente o pedido asociado a la notificación."
+        '409':
+          description: El registro no puede anularse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionClienteResponseError409'
+              example:
+                ok: false
+                error: "CONFLICTO"
+                detalle: "El registro ya existe o presenta un conflicto operativo."
 
 components:
   schemas:
@@ -96,6 +253,22 @@ components:
           description: "Contenido del mensaje enviado al cliente."
           example: "Su pedido se encuentra en camino."
 
+    NotificacionClienteRequestActualizar:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          description: "Nuevo estado del registro."
+          example: "actualizado"
+        observacion:
+          type: string
+          maxLength: 250
+          description: "Comentario asociado a la actualización."
+          example: "Actualización registrada correctamente."
+
     NotificacionClienteResponseExito:
       type: object
       properties:
@@ -113,6 +286,60 @@ components:
         mensaje:
           type: string
           example: "Notificación enviada correctamente"
+
+    NotificacionClienteResponseConsultaExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_notificacion:
+          type: string
+          maxLength: 50
+          example: "NOT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "registrado"
+        mensaje:
+          type: string
+          example: "Consulta realizada correctamente"
+
+    NotificacionClienteResponseActualizarExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_notificacion:
+          type: string
+          maxLength: 50
+          example: "NOT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "actualizado"
+        mensaje:
+          type: string
+          example: "Registro actualizado correctamente"
+
+    NotificacionClienteResponseAnularExito:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        id_notificacion:
+          type: string
+          maxLength: 50
+          example: "NOT-000321"
+        estado:
+          type: string
+          maxLength: 30
+          example: "anulado"
+        mensaje:
+          type: string
+          example: "Registro anulado correctamente"
 
     NotificacionClienteResponseError400:
       type: object
@@ -143,3 +370,18 @@ components:
           type: string
           maxLength: 250
           example: "No se encontró el cliente o pedido asociado a la notificación."
+
+    NotificacionClienteResponseError409:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          maxLength: 100
+          example: "CONFLICTO"
+        detalle:
+          type: string
+          maxLength: 250
+          example: "El registro ya existe o presenta un conflicto operativo."

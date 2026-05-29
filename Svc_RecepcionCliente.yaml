@@ -45,8 +45,8 @@ paths:
               estado_recepcion: "recibido"
               observacion: "Pedido recibido conforme."
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -77,6 +77,7 @@ paths:
                 error: "RECEPCION_YA_CONFIRMADA"
                 detalle: "El pedido enviado ya cuenta con una recepción confirmada previamente."
 
+  /r
   /recepciones/{id_recepcion}:
     get:
       tags:

@@ -81,8 +81,8 @@ paths:
             example:
               id_pedido: "PED-000125"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -114,6 +114,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /p
   /pedidos/consultas/{id_consulta}:
     get:
       tags:

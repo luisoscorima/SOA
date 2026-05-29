@@ -44,7 +44,7 @@ paths:
               prioridad: "alta"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -75,6 +75,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /p
   /picking/{id_lista_picking}:
     get:
       tags:

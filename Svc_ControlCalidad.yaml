@@ -42,8 +42,8 @@ paths:
               id_proceso: "PROC-000125"
               tipo_proceso: "picking"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -75,6 +75,7 @@ paths:
                 error: "PRODUCTOS_YA_VALIDADOS"
                 detalle: "Uno o más productos ya fueron validados previamente."
 
+  /c
   /calidad/validaciones/{id_validacion}:
     get:
       tags:

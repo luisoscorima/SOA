@@ -44,8 +44,8 @@ paths:
               tipo_error: "cantidad_incorrecta"
               correccion: "Se ajusta cantidad por diferencia detectada en escaneo."
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -76,6 +76,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /c
   /carga/correcciones/{id_correccion}:
     get:
       tags:

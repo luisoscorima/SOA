@@ -43,8 +43,8 @@ paths:
               id_vehiculo: "VEH-000321"
               punto_origen: "ALM_LIMA"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '202':
+          description: Proceso aceptado en segundo plano
           content:
             application/json:
               schema:
@@ -75,6 +75,7 @@ paths:
                 error: "RUTA_YA_OPTIMIZADA"
                 detalle: "El despacho enviado ya cuenta con una ruta optimizada."
 
+  /r
   /rutas/optimizaciones/{id_optimizacion}:
     get:
       tags:

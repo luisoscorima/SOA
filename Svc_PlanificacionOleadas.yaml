@@ -43,7 +43,7 @@ paths:
               criterio_agrupacion: "zona_despacho"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -74,6 +74,7 @@ paths:
                 error: "PEDIDOS_YA_AGRUPADOS"
                 detalle: "Uno o más pedidos ya pertenecen a una oleada existente."
 
+  /o
   /oleadas/{id_oleada}:
     get:
       tags:

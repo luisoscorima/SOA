@@ -46,7 +46,7 @@ paths:
               id_ruta: "RUTA-000789"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -77,6 +77,7 @@ paths:
                 error: "TEMPERATURA_FUERA_DE_RANGO"
                 detalle: "La temperatura registrada excede los límites permitidos para la carga."
 
+  /t
   /temperatura/monitoreos/{id_monitoreo}:
     get:
       tags:

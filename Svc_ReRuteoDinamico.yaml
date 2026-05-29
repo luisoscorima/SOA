@@ -43,8 +43,8 @@ paths:
               id_vehiculo: "VEH-000321"
               motivo: "bloqueo_vial"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '202':
+          description: Proceso aceptado en segundo plano
           content:
             application/json:
               schema:
@@ -76,6 +76,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /r
   /rutas/re-ruteos/{id_reruteo}:
     get:
       tags:

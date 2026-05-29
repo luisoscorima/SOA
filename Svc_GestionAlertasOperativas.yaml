@@ -46,7 +46,7 @@ paths:
               descripcion: "Se detectó retraso superior a 30 minutos."
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -77,6 +77,7 @@ paths:
                 error: "ALERTA_YA_REGISTRADA"
                 detalle: "El evento enviado ya cuenta con una alerta operativa registrada."
 
+  /a
   /alertas/operativas/{id_alerta}:
     get:
       tags:
@@ -121,7 +122,7 @@ paths:
         - TMS
       operationId: actualizarGestionAlertasOperativas
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
       parameters:
         - name: id_alerta
           in: path
@@ -170,54 +171,6 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
-    delete:
-      tags:
-        - TMS
-      operationId: anularGestionAlertasOperativas
-      summary: Anular registro
-      description: Anula o cancela un registro previamente creado.
-      parameters:
-        - name: id_alerta
-          in: path
-          required: true
-          description: Identificador del registro a anular.
-          schema:
-            type: string
-            maxLength: 50
-            example: "ALR-000321"
-      responses:
-        '200':
-          description: Registro anulado correctamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GestionAlertasOperativasResponseAnularExito'
-              example:
-                ok: true
-                id_alerta: "ALR-000321"
-                estado: "anulado"
-                mensaje: "Registro anulado correctamente"
-        '404':
-          description: Recurso no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GestionAlertasOperativasResponseError404'
-              example:
-                ok: false
-                error: "RECURSO_NO_ENCONTRADO"
-                detalle: "No se encontró el registro solicitado."
-        '409':
-          description: El registro no puede anularse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GestionAlertasOperativasResponseError409'
-              example:
-                ok: false
-                error: "ALERTA_YA_REGISTRADA"
-                detalle: "El evento enviado ya cuenta con una alerta operativa registrada."
-
 components:
   schemas:
     GestionAlertasOperativasRequest:
@@ -261,7 +214,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
+          description: "Nuevo estado del registro. Use \"anulado\" para cancelar sin eliminar."
           example: "actualizado"
         observacion:
           type: string
@@ -322,24 +275,6 @@ components:
         mensaje:
           type: string
           example: "Registro actualizado correctamente"
-
-    GestionAlertasOperativasResponseAnularExito:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          example: true
-        id_alerta:
-          type: string
-          maxLength: 50
-          example: "ALR-000321"
-        estado:
-          type: string
-          maxLength: 30
-          example: "anulado"
-        mensaje:
-          type: string
-          example: "Registro anulado correctamente"
 
     GestionAlertasOperativasResponseError400:
       type: object

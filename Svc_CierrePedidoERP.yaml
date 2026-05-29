@@ -43,8 +43,8 @@ paths:
               fecha_cierre: "2026-05-29"
               observacion: "Pedido entregado y liquidado correctamente."
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -75,6 +75,7 @@ paths:
                 error: "PEDIDO_YA_CERRADO"
                 detalle: "El pedido enviado ya se encuentra cerrado en el ERP."
 
+  /p
   /pedidos/cierres/{id_cierre}:
     get:
       tags:

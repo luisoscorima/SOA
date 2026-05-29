@@ -44,7 +44,7 @@ paths:
               id_transportista: "TR-000125"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -76,6 +76,7 @@ paths:
                 error: "PALLETS_YA_CARGADOS"
                 detalle: "Uno o más pallets ya fueron cargados previamente en un camión."
 
+  /m
   /mercancia/cargas/{id_carga}:
     get:
       tags:
@@ -120,7 +121,7 @@ paths:
         - Logística
       operationId: actualizarCargaMercancia
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
       parameters:
         - name: id_carga
           in: path
@@ -169,54 +170,6 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
-    delete:
-      tags:
-        - Logística
-      operationId: anularCargaMercancia
-      summary: Anular registro
-      description: Anula o cancela un registro previamente creado.
-      parameters:
-        - name: id_carga
-          in: path
-          required: true
-          description: Identificador del registro a anular.
-          schema:
-            type: string
-            maxLength: 50
-            example: "CARGA-000654"
-      responses:
-        '200':
-          description: Registro anulado correctamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CargaMercanciaResponseAnularExito'
-              example:
-                ok: true
-                id_carga: "CARGA-000654"
-                estado: "anulado"
-                mensaje: "Registro anulado correctamente"
-        '404':
-          description: Recurso no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CargaMercanciaResponseError404'
-              example:
-                ok: false
-                error: "RECURSO_NO_ENCONTRADO"
-                detalle: "No se encontró el registro solicitado."
-        '409':
-          description: El registro no puede anularse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CargaMercanciaResponseError409'
-              example:
-                ok: false
-                error: "PALLETS_YA_CARGADOS"
-                detalle: "Uno o más pallets ya fueron cargados previamente en un camión."
-
 components:
   schemas:
     CargaMercanciaRequest:
@@ -264,7 +217,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
+          description: "Nuevo estado del registro. Use \"anulado\" para cancelar sin eliminar."
           example: "actualizado"
         observacion:
           type: string
@@ -328,24 +281,6 @@ components:
         mensaje:
           type: string
           example: "Registro actualizado correctamente"
-
-    CargaMercanciaResponseAnularExito:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          example: true
-        id_carga:
-          type: string
-          maxLength: 50
-          example: "CARGA-000654"
-        estado:
-          type: string
-          maxLength: 30
-          example: "anulado"
-        mensaje:
-          type: string
-          example: "Registro anulado correctamente"
 
     CargaMercanciaResponseError400:
       type: object

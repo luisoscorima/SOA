@@ -45,7 +45,7 @@ paths:
               prioridad: "alta"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -76,6 +76,7 @@ paths:
                 error: "BAHIA_NO_DISPONIBLE"
                 detalle: "No existen bahías disponibles para la operación solicitada."
 
+  /b
   /bahias/asignaciones/{id_asignacion}:
     get:
       tags:

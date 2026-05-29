@@ -42,8 +42,8 @@ paths:
               id_factura: "FAC-000125"
               id_entrega: "ENT-000125"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -74,6 +74,7 @@ paths:
                 error: "INCONSISTENCIA_FACTURA"
                 detalle: "Existen diferencias entre los productos entregados y los registrados en la factura."
 
+  /f
   /facturas/validaciones/{id_validacion}:
     get:
       tags:

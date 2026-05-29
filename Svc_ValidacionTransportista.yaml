@@ -44,8 +44,8 @@ paths:
               licencia_conducir: "Q12345678"
               placa_vehiculo: "ABC-123"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -76,6 +76,7 @@ paths:
                 error: "TRANSPORTISTA_NO_VALIDO"
                 detalle: "El transportista no cumple con los requisitos legales u operativos para el despacho."
 
+  /t
   /transportistas/validaciones/{id_validacion}:
     get:
       tags:

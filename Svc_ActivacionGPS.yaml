@@ -44,7 +44,7 @@ paths:
               id_ruta: "RUTA-000789"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -75,6 +75,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /g
   /gps/activaciones/{id_activacion}:
     get:
       tags:
@@ -119,7 +120,7 @@ paths:
         - TMS
       operationId: actualizarActivacionGPS
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
       parameters:
         - name: id_activacion
           in: path
@@ -168,54 +169,6 @@ paths:
                 error: "VEHICULO_NO_ENCONTRADO"
                 detalle: "No se encontró un vehículo registrado con los datos enviados."
 
-    delete:
-      tags:
-        - TMS
-      operationId: anularActivacionGPS
-      summary: Anular registro
-      description: Anula o cancela un registro previamente creado.
-      parameters:
-        - name: id_activacion
-          in: path
-          required: true
-          description: Identificador del registro a anular.
-          schema:
-            type: string
-            maxLength: 50
-            example: "ACT-000321"
-      responses:
-        '200':
-          description: Registro anulado correctamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActivacionGPSResponseAnularExito'
-              example:
-                ok: true
-                id_activacion: "ACT-000321"
-                estado: "anulado"
-                mensaje: "Registro anulado correctamente"
-        '404':
-          description: Recurso no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActivacionGPSResponseError404'
-              example:
-                ok: false
-                error: "VEHICULO_NO_ENCONTRADO"
-                detalle: "No se encontró un vehículo registrado con los datos enviados."
-        '409':
-          description: El registro no puede anularse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActivacionGPSResponseError409'
-              example:
-                ok: false
-                error: "CONFLICTO"
-                detalle: "El registro ya existe o presenta un conflicto operativo."
-
 components:
   schemas:
     ActivacionGPSRequest:
@@ -248,7 +201,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
+          description: "Nuevo estado del registro. Use \"anulado\" para cancelar sin eliminar."
           example: "actualizado"
         observacion:
           type: string
@@ -308,24 +261,6 @@ components:
         mensaje:
           type: string
           example: "Registro actualizado correctamente"
-
-    ActivacionGPSResponseAnularExito:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          example: true
-        id_activacion:
-          type: string
-          maxLength: 50
-          example: "ACT-000321"
-        estado:
-          type: string
-          maxLength: 30
-          example: "anulado"
-        mensaje:
-          type: string
-          example: "Registro anulado correctamente"
 
     ActivacionGPSResponseError400:
       type: object

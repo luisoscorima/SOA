@@ -43,8 +43,8 @@ paths:
               id_repartidor: "REP-001"
               id_cliente: 150
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -75,6 +75,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /p
   /productos/descargas/{id_descarga}:
     get:
       tags:

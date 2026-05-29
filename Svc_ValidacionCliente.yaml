@@ -95,8 +95,8 @@ paths:
               documento: "20123456789"
               tipo_cliente: "empresa"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -128,6 +128,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /c
   /clientes/validaciones/{id_validacion}:
     get:
       tags:

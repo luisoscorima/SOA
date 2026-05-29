@@ -46,7 +46,7 @@ paths:
               severidad: "media"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -77,6 +77,7 @@ paths:
                 error: "CONFLICTO"
                 detalle: "El registro ya existe o presenta un conflicto operativo."
 
+  /i
   /incidencias/{id_incidencia}:
     get:
       tags:
@@ -121,7 +122,7 @@ paths:
         - TMS
       operationId: actualizarRegistroIncidencias
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
       parameters:
         - name: id_incidencia
           in: path
@@ -170,54 +171,6 @@ paths:
                 error: "RUTA_O_VEHICULO_NO_ENCONTRADO"
                 detalle: "No se encontró la ruta o el vehículo asociado a la incidencia."
 
-    delete:
-      tags:
-        - TMS
-      operationId: anularRegistroIncidencias
-      summary: Anular registro
-      description: Anula o cancela un registro previamente creado.
-      parameters:
-        - name: id_incidencia
-          in: path
-          required: true
-          description: Identificador del registro a anular.
-          schema:
-            type: string
-            maxLength: 50
-            example: "INC-000456"
-      responses:
-        '200':
-          description: Registro anulado correctamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistroIncidenciasResponseAnularExito'
-              example:
-                ok: true
-                id_incidencia: "INC-000456"
-                estado: "anulado"
-                mensaje: "Registro anulado correctamente"
-        '404':
-          description: Recurso no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistroIncidenciasResponseError404'
-              example:
-                ok: false
-                error: "RUTA_O_VEHICULO_NO_ENCONTRADO"
-                detalle: "No se encontró la ruta o el vehículo asociado a la incidencia."
-        '409':
-          description: El registro no puede anularse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistroIncidenciasResponseError409'
-              example:
-                ok: false
-                error: "CONFLICTO"
-                detalle: "El registro ya existe o presenta un conflicto operativo."
-
 components:
   schemas:
     RegistroIncidenciasRequest:
@@ -262,7 +215,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
+          description: "Nuevo estado del registro. Use \"anulado\" para cancelar sin eliminar."
           example: "actualizado"
         observacion:
           type: string
@@ -323,24 +276,6 @@ components:
         mensaje:
           type: string
           example: "Registro actualizado correctamente"
-
-    RegistroIncidenciasResponseAnularExito:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          example: true
-        id_incidencia:
-          type: string
-          maxLength: 50
-          example: "INC-000456"
-        estado:
-          type: string
-          maxLength: 30
-          example: "anulado"
-        mensaje:
-          type: string
-          example: "Registro anulado correctamente"
 
     RegistroIncidenciasResponseError400:
       type: object

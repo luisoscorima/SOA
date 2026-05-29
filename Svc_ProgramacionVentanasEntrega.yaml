@@ -46,7 +46,7 @@ paths:
               direccion_entrega: "Av. Principal 123, Lima"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -78,6 +78,7 @@ paths:
                 error: "VENTANA_NO_DISPONIBLE"
                 detalle: "No existe disponibilidad para la ventana de entrega solicitada."
 
+  /e
   /entregas/ventanas/{id_ventana}:
     get:
       tags:

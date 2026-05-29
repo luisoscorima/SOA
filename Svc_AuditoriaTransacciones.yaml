@@ -47,7 +47,7 @@ paths:
               detalle: "Actualización automática de stock ejecutada correctamente."
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -78,6 +78,7 @@ paths:
                 error: "EVENTO_YA_REGISTRADO"
                 detalle: "El evento enviado ya fue registrado previamente en auditoría."
 
+  /a
   /auditoria/transacciones/{id_auditoria}:
     get:
       tags:
@@ -122,7 +123,7 @@ paths:
         - Seguridad
       operationId: actualizarAuditoriaTransacciones
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
       parameters:
         - name: id_auditoria
           in: path
@@ -220,7 +221,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
+          description: "Nuevo estado del registro. Use \"anulado\" para cancelar sin eliminar."
           example: "actualizado"
         observacion:
           type: string

@@ -46,8 +46,8 @@ paths:
               punto_llegada: "CLIENTE_LIMA"
               placa_vehiculo: "ABC-123"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '202':
+          description: Proceso aceptado en segundo plano
           content:
             application/json:
               schema:
@@ -79,6 +79,7 @@ paths:
                 error: "GUIA_YA_GENERADA"
                 detalle: "El despacho enviado ya cuenta con una guía de remisión generada."
 
+  /g
   /guias/{id_guia}:
     get:
       tags:
@@ -123,7 +124,7 @@ paths:
         - SUNAT
       operationId: actualizarGeneracionGuia
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
       parameters:
         - name: id_guia
           in: path
@@ -171,54 +172,6 @@ paths:
                 ok: false
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
-
-    delete:
-      tags:
-        - SUNAT
-      operationId: anularGeneracionGuia
-      summary: Anular registro
-      description: Anula o cancela un registro previamente creado.
-      parameters:
-        - name: id_guia
-          in: path
-          required: true
-          description: Identificador del registro a anular.
-          schema:
-            type: string
-            maxLength: 50
-            example: "GUIA-000321"
-      responses:
-        '200':
-          description: Registro anulado correctamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneracionGuiaResponseAnularExito'
-              example:
-                ok: true
-                id_guia: "GUIA-000321"
-                estado: "anulado"
-                mensaje: "Registro anulado correctamente"
-        '404':
-          description: Recurso no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneracionGuiaResponseError404'
-              example:
-                ok: false
-                error: "RECURSO_NO_ENCONTRADO"
-                detalle: "No se encontró el registro solicitado."
-        '409':
-          description: El registro no puede anularse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneracionGuiaResponseError409'
-              example:
-                ok: false
-                error: "GUIA_YA_GENERADA"
-                detalle: "El despacho enviado ya cuenta con una guía de remisión generada."
 
 components:
   schemas:
@@ -291,7 +244,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
+          description: "Nuevo estado del registro. Use \"anulado\" para cancelar sin eliminar."
           example: "actualizado"
         observacion:
           type: string
@@ -356,24 +309,6 @@ components:
         mensaje:
           type: string
           example: "Registro actualizado correctamente"
-
-    GeneracionGuiaResponseAnularExito:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          example: true
-        id_guia:
-          type: string
-          maxLength: 50
-          example: "GUIA-000321"
-        estado:
-          type: string
-          maxLength: 30
-          example: "anulado"
-        mensaje:
-          type: string
-          example: "Registro anulado correctamente"
 
     GeneracionGuiaResponseError400:
       type: object

@@ -47,7 +47,7 @@ paths:
               id_centro_distribucion: "CD_PUCUSANA"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -77,6 +77,7 @@ paths:
                 error: "PEDIDO_DUPLICADO"
                 detalle: "El pedido ERP ya fue sincronizado previamente con el WMS."
 
+  /e
   /erp-wms/sincronizaciones/{id_sincronizacion}:
     get:
       tags:

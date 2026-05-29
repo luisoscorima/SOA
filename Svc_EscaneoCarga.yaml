@@ -43,7 +43,7 @@ paths:
               id_operario: "OP-001"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Registro creado correctamente
           content:
             application/json:
               schema:
@@ -74,6 +74,7 @@ paths:
                 error: "PRODUCTO_YA_ESCANEADO"
                 detalle: "Uno o más productos o códigos LPN ya fueron escaneados previamente."
 
+  /c
   /carga/escaneos/{id_registro_escaneo}:
     get:
       tags:
@@ -118,7 +119,7 @@ paths:
         - Logística
       operationId: actualizarEscaneoCarga
       summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      description: Actualiza o corrige el estado de un registro existente. Para anular, envíe estado: anulado.
       parameters:
         - name: id_registro_escaneo
           in: path
@@ -167,54 +168,6 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
-    delete:
-      tags:
-        - Logística
-      operationId: anularEscaneoCarga
-      summary: Anular registro
-      description: Anula o cancela un registro previamente creado.
-      parameters:
-        - name: id_registro_escaneo
-          in: path
-          required: true
-          description: Identificador del registro a anular.
-          schema:
-            type: string
-            maxLength: 50
-            example: "ESC-000321"
-      responses:
-        '200':
-          description: Registro anulado correctamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EscaneoCargaResponseAnularExito'
-              example:
-                ok: true
-                id_registro_escaneo: "ESC-000321"
-                estado: "anulado"
-                mensaje: "Registro anulado correctamente"
-        '404':
-          description: Recurso no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EscaneoCargaResponseError404'
-              example:
-                ok: false
-                error: "RECURSO_NO_ENCONTRADO"
-                detalle: "No se encontró el registro solicitado."
-        '409':
-          description: El registro no puede anularse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EscaneoCargaResponseError409'
-              example:
-                ok: false
-                error: "PRODUCTO_YA_ESCANEADO"
-                detalle: "Uno o más productos o códigos LPN ya fueron escaneados previamente."
-
 components:
   schemas:
     EscaneoCargaRequest:
@@ -261,7 +214,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
+          description: "Nuevo estado del registro. Use \"anulado\" para cancelar sin eliminar."
           example: "actualizado"
         observacion:
           type: string
@@ -322,24 +275,6 @@ components:
         mensaje:
           type: string
           example: "Registro actualizado correctamente"
-
-    EscaneoCargaResponseAnularExito:
-      type: object
-      properties:
-        ok:
-          type: boolean
-          example: true
-        id_registro_escaneo:
-          type: string
-          maxLength: 50
-          example: "ESC-000321"
-        estado:
-          type: string
-          maxLength: 30
-          example: "anulado"
-        mensaje:
-          type: string
-          example: "Registro anulado correctamente"
 
     EscaneoCargaResponseError400:
       type: object

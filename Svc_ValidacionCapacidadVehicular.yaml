@@ -44,8 +44,8 @@ paths:
               volumen_total_m3: 18.5
               id_despacho: "DESP-000125"
       responses:
-        '201':
-          description: Operación registrada correctamente
+        '200':
+          description: Operación ejecutada correctamente
           content:
             application/json:
               schema:
@@ -76,6 +76,7 @@ paths:
                 error: "CAPACIDAD_EXCEDIDA"
                 detalle: "La carga excede el peso o volumen máximo permitido para el vehículo asignado."
 
+  /v
   /vehiculos/capacidad/validaciones/{id_validacion}:
     get:
       tags:

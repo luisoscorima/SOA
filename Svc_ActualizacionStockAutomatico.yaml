@@ -25,13 +25,13 @@ servers:
     description: Servidor Local de Desarrollo (Puerto 8081)
 
 paths:
-  /stock:
+  /stock/movimientos:
     post:
       tags:
         - Integración
-      operationId: registrarActualizacionStockAutomatico
+      operationId: registrarMovimientoStock
       summary: Registrar movimiento de stock
-      description: Crea o ejecuta una nueva operación del módulo ActualizacionStockAutomatico.
+      description: Registra un nuevo movimiento de inventario que actualiza el stock del producto en ERP/WMS.
       requestBody:
         required: true
         content:
@@ -40,23 +40,25 @@ paths:
               $ref: '#/components/schemas/ActualizacionStockAutomaticoRequest'
             example:
               id_movimiento: "MOV-000125"
+              id_producto: "SKU_IK_1.5L"
               id_almacen: "ALM_LIMA"
               tipo_movimiento: "salida"
               cantidad: 120
               sistema_origen: "WMS"
       responses:
         '201':
-          description: Operación registrada correctamente
+          description: Movimiento de stock registrado correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActualizacionStockAutomaticoResponseExito'
               example:
                 ok: true
+                id_movimiento: "MOV-000125"
                 id_actualizacion: "STOCK-000321"
                 id_producto: "SKU_IK_1.5L"
                 stock_actualizado: 230
-                estado: "actualizado"
+                estado: "procesado"
                 mensaje: "Stock actualizado correctamente en ERP/WMS"
         '400':
           description: Datos de entrada inválidos
@@ -79,25 +81,25 @@ paths:
                 error: "MOVIMIENTO_YA_PROCESADO"
                 detalle: "El movimiento de inventario enviado ya fue procesado previamente."
 
-  /stock/{id_producto}:
+  /stock/productos/{id_producto}:
     get:
       tags:
         - Integración
-      operationId: consultarActualizacionStockAutomatico
-      summary: Consultar registro
-      description: Consulta el resultado de una operación previamente registrada.
+      operationId: consultarStockProducto
+      summary: Consultar stock de producto
+      description: Consulta el stock actual y el estado de sincronización de un producto.
       parameters:
         - name: id_producto
           in: path
           required: true
-          description: Identificador del registro a consultar.
+          description: Código único del producto a consultar.
           schema:
             type: string
             maxLength: 50
             example: "SKU_IK_1.5L"
       responses:
         '200':
-          description: Consulta realizada correctamente
+          description: Stock consultado correctamente
           content:
             application/json:
               schema:
@@ -105,52 +107,58 @@ paths:
               example:
                 ok: true
                 id_producto: "SKU_IK_1.5L"
-                estado: "registrado"
-                mensaje: "Consulta realizada correctamente"
+                stock_actualizado: 230
+                estado: "sincronizado"
+                mensaje: "Stock consultado correctamente"
         '404':
-          description: Recurso no encontrado
+          description: Producto no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActualizacionStockAutomaticoResponseError404'
               example:
                 ok: false
-                error: "RECURSO_NO_ENCONTRADO"
-                detalle: "No se encontró el registro solicitado."
+                error: "PRODUCTO_NO_ENCONTRADO"
+                detalle: "No se encontró stock registrado para el producto solicitado."
 
+  /stock/movimientos/{id_movimiento}:
     put:
       tags:
         - Integración
-      operationId: actualizarActualizacionStockAutomatico
-      summary: Actualizar registro
-      description: Actualiza o corrige el estado de un registro existente.
+      operationId: actualizarMovimientoStock
+      summary: Actualizar movimiento de stock
+      description: Actualiza o corrige el estado de un movimiento existente. Para anular, envíe estado: anulado.
       parameters:
-        - name: id_producto
+        - name: id_movimiento
           in: path
           required: true
-          description: Identificador del registro a actualizar.
+          description: Código único del movimiento a actualizar.
           schema:
             type: string
             maxLength: 50
-            example: "SKU_IK_1.5L"
+            example: "MOV-000125"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ActualizacionStockAutomaticoRequestActualizar'
+            example:
+              estado: "corregido"
+              observacion: "Movimiento corregido por ajuste de inventario."
       responses:
         '200':
-          description: Registro actualizado correctamente
+          description: Movimiento actualizado correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActualizacionStockAutomaticoResponseActualizarExito'
               example:
                 ok: true
+                id_movimiento: "MOV-000125"
                 id_producto: "SKU_IK_1.5L"
-                estado: "actualizado"
-                mensaje: "Registro actualizado correctamente"
+                estado: "corregido"
+                mensaje: "Movimiento de stock actualizado correctamente"
         '400':
           description: Datos de entrada inválidos
           content:
@@ -162,15 +170,15 @@ paths:
                 error: "DATOS_INVALIDOS"
                 detalle: "La información del movimiento de inventario es inválida o incompleta."
         '404':
-          description: Recurso no encontrado
+          description: Movimiento no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActualizacionStockAutomaticoResponseError404'
               example:
                 ok: false
-                error: "RECURSO_NO_ENCONTRADO"
-                detalle: "No se encontró el registro solicitado."
+                error: "MOVIMIENTO_NO_ENCONTRADO"
+                detalle: "No se encontró el movimiento de stock solicitado."
 
 components:
   schemas:
@@ -178,6 +186,7 @@ components:
       type: object
       required:
         - id_movimiento
+        - id_producto
         - id_almacen
         - tipo_movimiento
         - cantidad
@@ -188,6 +197,11 @@ components:
           maxLength: 50
           description: "Código único del movimiento de inventario registrado."
           example: "MOV-000125"
+        id_producto:
+          type: string
+          maxLength: 50
+          description: "Código único del producto cuyo stock será actualizado."
+          example: "SKU_IK_1.5L"
         id_almacen:
           type: string
           maxLength: 20
@@ -217,8 +231,8 @@ components:
         estado:
           type: string
           maxLength: 30
-          description: "Nuevo estado del registro."
-          example: "actualizado"
+          description: "Nuevo estado del movimiento. Use \"anulado\" para cancelar sin eliminar."
+          example: "corregido"
         observacion:
           type: string
           maxLength: 250
@@ -231,6 +245,10 @@ components:
         ok:
           type: boolean
           example: true
+        id_movimiento:
+          type: string
+          maxLength: 50
+          example: "MOV-000125"
         id_actualizacion:
           type: string
           maxLength: 50
@@ -246,7 +264,7 @@ components:
         estado:
           type: string
           maxLength: 30
-          example: "actualizado"
+          example: "procesado"
         mensaje:
           type: string
           example: "Stock actualizado correctamente en ERP/WMS"
@@ -261,13 +279,17 @@ components:
           type: string
           maxLength: 50
           example: "SKU_IK_1.5L"
+        stock_actualizado:
+          type: integer
+          minimum: 0
+          example: 230
         estado:
           type: string
           maxLength: 30
-          example: "registrado"
+          example: "sincronizado"
         mensaje:
           type: string
-          example: "Consulta realizada correctamente"
+          example: "Stock consultado correctamente"
 
     ActualizacionStockAutomaticoResponseActualizarExito:
       type: object
@@ -275,6 +297,10 @@ components:
         ok:
           type: boolean
           example: true
+        id_movimiento:
+          type: string
+          maxLength: 50
+          example: "MOV-000125"
         id_producto:
           type: string
           maxLength: 50
@@ -282,10 +308,10 @@ components:
         estado:
           type: string
           maxLength: 30
-          example: "actualizado"
+          example: "corregido"
         mensaje:
           type: string
-          example: "Registro actualizado correctamente"
+          example: "Movimiento de stock actualizado correctamente"
 
     ActualizacionStockAutomaticoResponseError400:
       type: object

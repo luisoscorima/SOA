@@ -1,0 +1,9 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.maven.enabled": true,
+  "java.project.sourcePaths": ["interfaces/src/main/java"],
+  "java.project.outputPath": "interfaces/target/classes",
+  "files.associations": {
+    "*.yaml": "yaml"
+  }
+}

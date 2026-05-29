@@ -39,18 +39,23 @@ paths:
           required: true
           schema:
             type: string
+            minLength: 3
+            maxLength: 50
             example: "SKU_IK_1.5L"
         - name: cantidad
           in: query
           required: true
           schema:
             type: integer
+            minimum: 1
+            maximum: 10000
             example: 120
         - name: id_almacen
           in: query
           required: false
           schema:
             type: string
+            maxLength: 20
             example: "ALM_LIMA"
       responses:
         '200':

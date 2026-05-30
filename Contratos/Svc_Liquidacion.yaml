@@ -169,6 +169,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     LiquidacionRequest:
@@ -335,3 +338,9 @@ components:
           type: string
           maxLength: 250
           example: "La ruta enviada ya cuenta con una liquidación generada previamente."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

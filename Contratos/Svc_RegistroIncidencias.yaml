@@ -170,6 +170,9 @@ paths:
                 error: "RUTA_O_VEHICULO_NO_ENCONTRADO"
                 detalle: "No se encontró la ruta o el vehículo asociado a la incidencia."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     RegistroIncidenciasRequest:
@@ -320,3 +323,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

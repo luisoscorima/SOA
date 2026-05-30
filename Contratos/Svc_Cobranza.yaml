@@ -170,6 +170,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     CobranzaRequest:
@@ -321,3 +324,9 @@ components:
           type: string
           maxLength: 250
           example: "El pedido enviado ya cuenta con un pago registrado previamente."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

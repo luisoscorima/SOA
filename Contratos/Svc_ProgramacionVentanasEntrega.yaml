@@ -219,6 +219,9 @@ paths:
                 error: "VENTANA_NO_DISPONIBLE"
                 detalle: "No existe disponibilidad para la ventana de entrega solicitada."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ProgramacionVentanasEntregaRequest:
@@ -389,3 +392,9 @@ components:
           type: string
           maxLength: 250
           example: "No existe disponibilidad para la ventana de entrega solicitada."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

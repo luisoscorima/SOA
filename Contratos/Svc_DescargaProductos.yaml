@@ -168,6 +168,9 @@ paths:
                 error: "ENTREGA_NO_ENCONTRADA"
                 detalle: "No se encontró una entrega registrada con el identificador enviado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     DescargaProductosRequest:
@@ -320,3 +323,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

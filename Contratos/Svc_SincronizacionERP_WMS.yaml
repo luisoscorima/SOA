@@ -170,6 +170,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     SincronizacionERP_WMSRequest:
@@ -321,3 +324,9 @@ components:
           type: string
           maxLength: 250
           example: "El pedido ERP ya fue sincronizado previamente con el WMS."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

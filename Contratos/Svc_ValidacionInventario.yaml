@@ -226,6 +226,9 @@ paths:
                 error: "PRODUCTO_NO_ENCONTRADO"
                 detalle: "No se encontró stock registrado para el producto solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ValidacionInventarioRequest:
@@ -370,3 +373,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

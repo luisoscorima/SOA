@@ -167,6 +167,9 @@ paths:
                 error: "LISTA_PICKING_NO_ENCONTRADA"
                 detalle: "No existe una lista de picking registrada con el identificador enviado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     EjecucionPickingRequest:
@@ -319,3 +322,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

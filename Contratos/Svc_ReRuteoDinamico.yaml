@@ -169,6 +169,9 @@ paths:
                 error: "INCIDENCIA_O_RUTA_NO_ENCONTRADA"
                 detalle: "No se encontró la incidencia o ruta asociada al re-ruteo solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ReRuteoDinamicoRequest:
@@ -311,3 +314,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

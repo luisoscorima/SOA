@@ -168,6 +168,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ConsolidacionEstibadoRequest:
@@ -323,3 +326,9 @@ components:
           type: string
           maxLength: 250
           example: "Los productos enviados ya fueron asociados previamente a un pallet."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

@@ -170,6 +170,9 @@ paths:
                 error: "CLIENTE_O_PEDIDO_NO_ENCONTRADO"
                 detalle: "No se encontró el cliente o pedido asociado a la notificación."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     NotificacionClienteRequest:
@@ -319,3 +322,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

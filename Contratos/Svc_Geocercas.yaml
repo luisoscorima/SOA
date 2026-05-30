@@ -226,6 +226,9 @@ paths:
                 error: "GEOCERCA_NO_ENCONTRADA"
                 detalle: "No existe una geocerca registrada con el identificador enviado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     GeocercasRequest:
@@ -378,3 +381,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

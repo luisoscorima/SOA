@@ -172,6 +172,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     GeneracionGuiaRequest:
@@ -353,3 +356,9 @@ components:
           type: string
           maxLength: 250
           example: "El despacho enviado ya cuenta con una guía de remisión generada."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

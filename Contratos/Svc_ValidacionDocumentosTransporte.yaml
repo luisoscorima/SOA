@@ -167,6 +167,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ValidacionDocumentosTransporteRequest:
@@ -313,3 +316,9 @@ components:
           type: string
           maxLength: 250
           example: "Uno o más documentos requeridos no son válidos o se encuentran vencidos."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

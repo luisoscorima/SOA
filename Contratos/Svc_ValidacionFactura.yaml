@@ -167,6 +167,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ValidacionFacturaRequest:
@@ -314,3 +317,9 @@ components:
           type: string
           maxLength: 250
           example: "Existen diferencias entre los productos entregados y los registrados en la factura."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

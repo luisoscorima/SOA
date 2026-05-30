@@ -215,6 +215,9 @@ paths:
                 error: "PEDIDOS_YA_AGRUPADOS"
                 detalle: "Uno o más pedidos ya pertenecen a una oleada existente."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     PlanificacionOleadasRequest:
@@ -384,3 +387,9 @@ components:
           type: string
           maxLength: 250
           example: "Uno o más pedidos ya pertenecen a una oleada existente."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

@@ -171,6 +171,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     AuditoriaTransaccionesRequest:
@@ -326,3 +329,9 @@ components:
           type: string
           maxLength: 250
           example: "El evento enviado ya fue registrado previamente en auditoría."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

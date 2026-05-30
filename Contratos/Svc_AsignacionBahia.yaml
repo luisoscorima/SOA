@@ -217,6 +217,9 @@ paths:
                 error: "BAHIA_NO_DISPONIBLE"
                 detalle: "No existen bahías disponibles para la operación solicitada."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     AsignacionBahiaRequest:
@@ -379,3 +382,9 @@ components:
           type: string
           maxLength: 250
           example: "No existen bahías disponibles para la operación solicitada."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

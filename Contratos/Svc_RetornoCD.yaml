@@ -43,7 +43,7 @@ paths:
               placa_vehiculo: "ABC-123"
               id_ruta: "RUTA-000789"
               id_centro_distribucion: "CD_PUCUSANA"
-              hora_llegada: "2026-05-29T18:30:00"
+              hora_llegada: "2026-05-29T18:30:00-05:00"
       responses:
         '201':
           description: Registro creado correctamente
@@ -169,6 +169,9 @@ paths:
                 ok: false
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
+
+security:
+  - bearerAuth: []
 
 components:
   schemas:
@@ -320,3 +323,9 @@ components:
           type: string
           maxLength: 250
           example: "El vehículo ya cuenta con un retorno registrado para la ruta indicada."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

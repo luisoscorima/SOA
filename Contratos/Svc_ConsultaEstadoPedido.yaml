@@ -51,7 +51,7 @@ paths:
                 ok: true
                 id_pedido: "PED-000125"
                 estado: "en_ruta"
-                fecha_actualizacion: "2026-05-29T15:30:00"
+                fecha_actualizacion: "2026-05-29T15:30:00-05:00"
                 mensaje: "Estado del pedido consultado correctamente"
         '400':
           description: Datos de entrada inválidos
@@ -207,6 +207,9 @@ paths:
                 error: "PEDIDO_NO_ENCONTRADO"
                 detalle: "No existe un pedido registrado con el identificador enviado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ConsultaEstadoPedidoRequest:
@@ -349,3 +352,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

@@ -168,6 +168,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     EtiquetadoLPNRequest:
@@ -306,3 +309,9 @@ components:
           type: string
           maxLength: 250
           example: "El pallet ya tiene un código LPN asignado."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

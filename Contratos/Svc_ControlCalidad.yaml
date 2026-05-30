@@ -168,6 +168,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ControlCalidadRequest:
@@ -327,3 +330,9 @@ components:
           type: string
           maxLength: 250
           example: "Uno o más productos ya fueron validados previamente."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

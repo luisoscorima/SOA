@@ -167,6 +167,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     GestionRetornablesRequest:
@@ -316,3 +319,9 @@ components:
           type: string
           maxLength: 250
           example: "Los envases retornables asociados a esta entrega ya fueron registrados previamente."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

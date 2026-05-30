@@ -170,6 +170,9 @@ paths:
                 error: "RECURSO_NO_ENCONTRADO"
                 detalle: "No se encontró el registro solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     FirmaDigitalPODRequest:
@@ -317,3 +320,9 @@ components:
           type: string
           maxLength: 250
           example: "La entrega enviada ya cuenta con una evidencia POD registrada."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

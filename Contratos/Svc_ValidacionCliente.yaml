@@ -221,6 +221,9 @@ paths:
                 error: "CLIENTE_NO_ENCONTRADO"
                 detalle: "No existe un cliente registrado con los datos enviados."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ValidacionClienteRequest:
@@ -360,3 +363,9 @@ components:
           type: string
           maxLength: 250
           example: "El registro ya existe o presenta un conflicto operativo."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

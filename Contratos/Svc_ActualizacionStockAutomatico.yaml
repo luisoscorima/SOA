@@ -180,6 +180,9 @@ paths:
                 error: "MOVIMIENTO_NO_ENCONTRADO"
                 detalle: "No se encontró el movimiento de stock solicitado."
 
+security:
+  - bearerAuth: []
+
 components:
   schemas:
     ActualizacionStockAutomaticoRequest:
@@ -357,3 +360,9 @@ components:
           type: string
           maxLength: 250
           example: "El movimiento de inventario enviado ya fue procesado previamente."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

@@ -1,0 +1,11 @@
+# Build / dependencias
+**/target/
+**/vendor/
+*.class
+composer.phar
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+*.iml

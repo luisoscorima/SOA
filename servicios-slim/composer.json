@@ -1,0 +1,16 @@
+{
+    "name": "arca-continental/servicios-slim",
+    "description": "5 REST + 5 SOAP para orquestación Anypoint - Arca Continental Lindley",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.6",
+        "econea/nusoap": "^0.9.20"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

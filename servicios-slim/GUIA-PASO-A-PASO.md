@@ -77,7 +77,7 @@ servicios-slim/
 │   └── schema.sql         → Crea la BD y tablas
 ├── ejemplos/
 │   └── soap-envelopes.md  → XML de prueba para Postman
-├── ANYPOINT.md            → Cómo consumir desde Mule
+├── ANYPOINT.md            → Guía única: flow Mule + 10 servicios
 └── GUIA-PASO-A-PASO.md    → Este documento
 ```
 
@@ -543,7 +543,7 @@ Pero lo ideal es la orquestación en vivo.
 | Archivo | Úsalo para |
 |---------|------------|
 | `README.md` | Arranque rápido |
-| `ANYPOINT.md` | Armar el flow Mule paso a paso |
+| `ANYPOINT.md` | Guía única: Listener, 10 servicios, scripts y errores |
 | `ejemplos/soap-envelopes.md` | XML listos para Postman |
 | `scripts/test-all.ps1` | Probar los 10 servicios de un golpe |
 | `GUIA-PASO-A-PASO.md` | Entender, informar y demostrar (este archivo) |

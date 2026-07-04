@@ -70,8 +70,8 @@ Catálogo: http://localhost:8080/
 Ejemplo WSDL: http://localhost:8080/soap/validacionCliente.php?wsdl
 
 Envelopes XML: `ejemplos/soap-envelopes.md`  
-Guía Anypoint: `ANYPOINT.md`  
-**Guía completa (informe + demo en vivo):** `GUIA-PASO-A-PASO.md`
+**Anypoint (flow + 10 servicios):** `ANYPOINT.md`  
+**Informe + demo en vivo:** `GUIA-PASO-A-PASO.md`
 
 ## Base de datos
 
